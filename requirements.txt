@@ -1,0 +1,24 @@
+# Backend y API
+fastapi
+uvicorn
+
+# Procesamiento de Código
+tree-sitter
+astroid
+
+# Inteligencia Artificial (IA)
+torch
+transformers
+langchain
+sentence-transformers
+
+# Base de datos y búsqueda semántica
+qdrant-client
+pymongo
+
+# Frontend con Streamlit
+streamlit
+
+# Otras utilidades
+python-dotenv
+pydantic
