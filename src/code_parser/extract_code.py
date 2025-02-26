@@ -12,7 +12,7 @@ def list_source_files(path, extensions=[".py", ".js", ".java"]):
                 if filename.endswith(tuple(extensions)):
                     files.append(os.path.join(root, filename))
         return files
-    except() as e:
+    except Exception as e:
         print(f"⚠️ Failed to list source files: {path}: {e}")
         return None
 
@@ -36,6 +36,6 @@ def extract_code(path, extensions=[".py", ".js", ".java"]):
                 code[file] = content
         return code
     
-    except () as e:
+    except Exception as e:
         print(f"⚠️ Failed to extract code: {path}: {e}")
         return None
