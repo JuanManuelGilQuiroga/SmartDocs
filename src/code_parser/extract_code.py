@@ -1,8 +1,8 @@
 import os
 
-EXCLUDED_DIRS = {".git", "node_modules", "venv"}
+EXCLUDED_DIRS = {".git", "node_modules", "venv", ".env", ".gitignore", "package-lock.json", "package.json", "img" }
 
-def list_source_files(path, extensions=[".py", ".js", ".java"]):
+def list_source_files(path, extensions=[".py", ".js", ".java", ".jsx", ".cjs"]):
     try:
         files = []
     
@@ -25,7 +25,7 @@ def read_file_content(path):
         print(f"⚠️ Failed to read content {path}: {e}")
         return None
     
-def extract_code(path, extensions=[".py", ".js", ".java"]):
+def extract_code(path, extensions=[".py", ".js", ".java", ".jsx", ".cjs"]):
     try:
         files = list_source_files(path, extensions)
         code = {}
