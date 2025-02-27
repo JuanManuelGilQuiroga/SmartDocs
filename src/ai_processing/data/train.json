@@ -1,0 +1,10 @@
+[
+    {
+        "code": "def sumar(a, b): return a + b",
+        "doc": "\"\"\"Suma dos números y devuelve el resultado.\"\"\""
+    },
+    {
+        "code": "public int multiplicar(int a, int b) { return a * b; }",
+        "doc": "/** Multiplica dos números y devuelve el resultado. */"
+    }
+]

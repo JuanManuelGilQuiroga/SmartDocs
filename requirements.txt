@@ -10,7 +10,11 @@ astroid
 torch
 transformers
 langchain
+langchain-community
+langchain-huggingface
 sentence-transformers
+accelerate>=0.26.0
+datasets
 
 # Base de datos y búsqueda semántica
 qdrant-client
