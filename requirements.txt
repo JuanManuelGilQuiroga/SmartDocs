@@ -4,6 +4,10 @@ uvicorn
 
 # Procesamiento de Código
 tree-sitter
+tree-sitter-languages
+tree-sitter-python
+tree-sitter-java
+tree-sitter-javascript
 astroid
 
 # Inteligencia Artificial (IA)
