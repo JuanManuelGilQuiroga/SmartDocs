@@ -36,8 +36,26 @@ class CodeDocumentationDataset(Dataset):
     # Tokeniza el codigo y la documentacion usada para entrenar el modelo, asigna padding para que no hayan errores con los tensores, y devuelve tensores para pytorch
     def __getitem__(self, idx):
         item = self.data[idx]
-        source = item["code"]
-        target = item["doc"]
+
+        all_imports = []
+        all_functions = []
+        all_classes = []
+        
+        for file_path, file_content in item["input"].items():
+            all_imports.extend(file_content.get("imports", []))
+            all_functions.extend(file_content["functions"].values())
+            all_classes.extend(file_content["functions"].values())
+
+        imports = "\n".join(all_imports)
+        functions = "\n".join(all_functions)
+        classes = "\n".join(all_classes)
+        source = (
+            f"<IMPORTS>\n{imports}\n\n"
+            f"<FUNCTIONS>\n{functions}\n\n"
+            f"<CLASSES>\n{classes}"
+        )
+
+        target = item["output"]
 
         tokenized_input = self.tokenizer(source, max_length=self.max_code_tokens, truncation=True, padding="max_length", return_tensors="pt")
         tokenized_target = self.tokenizer(target, max_length=self.max_doc_tokens, truncation=True, padding="max_length", return_tensors="pt")
