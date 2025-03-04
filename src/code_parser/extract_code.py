@@ -1,6 +1,6 @@
 import os
 
-EXCLUDED_DIRS = {".git", "node_modules", "venv", ".env", ".gitignore", "package-lock.json", "package.json", "img" }
+EXCLUDED_DIRS = {".git", "node_modules", "venv", ".env", ".gitignore", "package-lock.json", "package.json", "img", "env" }
 
 def list_source_files(path, extensions=[".py", ".js", ".java", ".jsx", ".cjs"]):
     try:

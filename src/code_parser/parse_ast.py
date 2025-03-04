@@ -60,6 +60,35 @@ def analyze_tree(tree, extension):
                 elif node.type == "class_declaration":
                     class_name = node.child_by_field_name("name").text.decode()
                     parsed_data["classes"][class_name] = {"docstring": "No docstring", "methods": {}}
+                    
+                # validacion para clases que comienzan con modele.exports
+                elif node.type == "assignment_expression":
+                    left_node = node.child_by_field_name("left")
+                    right_node = node.child_by_field_name("right")
+                    if left_node and left_node.type == "member_expression":
+                        object_node = left_node.child_by_field_name("object")
+                        property_node = left_node.child_by_field_name("property")
+
+                        if object_node.text.decode() == "module" and property_node.text.decode() == "exports":
+                            
+                            class_name_node = right_node.child_by_field_name("name")
+                            class_name = class_name_node.text.decode() if class_name_node else ""
+                            
+                            parsed_data["classes"][class_name] = {"docstring": "No docstring", "methods": {}}
+
+                            # Buscar métodos dentro de la clase
+                            class_body = right_node.child_by_field_name("body")
+                            if class_body:
+                                for child in class_body.children:
+                                    if child.type == "method_definition":
+                                        method_name_node = child.child_by_field_name("name")
+                                        method_name = method_name_node.text.decode() if method_name_node else ""
+
+                                        body_node = child.child_by_field_name("body")
+                                        method_body = body_node.text.decode() if body_node else ""
+
+                                        # Guardamos el método en la estructura
+                                        parsed_data["classes"][class_name]["methods"][method_name] = method_body
 
                 elif node.type == "method_definition" and parent_class:
                     method_name = node.child_by_field_name("name").text.decode()
