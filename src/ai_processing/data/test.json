@@ -1,10 +1,768 @@
 [
     {
-        "code": "def sumar(a, b): return a + b",
-        "doc": "\"\"\"Suma dos números y devuelve el resultado.\"\"\""
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmp9np0ib_k\\gestionDeTareasPython-main\\app.py": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import streamlit as st",
+                    "from db.controllers import addTask, getTasks, markTaskCompleted, deleteCompletedTask, deleteCompletedTasks",
+                    "from utils.file_io import exportTasks, importTasks",
+                    "import time"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmp9np0ib_k\\gestionDeTareasPython-main\\db\\controllers.py": {
+                "classes": {},
+                "functions": {
+                    "addTask": "task = Task(title=title, description=description)\n    session.add(task)\n    session.commit()",
+                    "getTasks": "return session.query(Task).all()",
+                    "markTaskCompleted": "task = session.query(Task).get(taskId)\n    if task:\n        task.completed = True\n        session.commit()",
+                    "deleteCompletedTask": "task = session.query(Task).get(taskId)\n    if task.completed == True:\n        session.delete(task)\n        session.commit()",
+                    "deleteCompletedTasks": "session.query(Task).filter(Task.completed == True).delete()\n    session.commit()"
+                },
+                "imports": [
+                    "from .models import Session, Task"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmp9np0ib_k\\gestionDeTareasPython-main\\db\\models.py": {
+                "classes": {
+                    "Task": {
+                        "docstring": "No docstring",
+                        "methods": {}
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "from sqlalchemy import create_engine, Column, Integer, String, Boolean",
+                    "from sqlalchemy.ext.declarative import declarative_base",
+                    "from sqlalchemy.orm import sessionmaker",
+                    "import os"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmp9np0ib_k\\gestionDeTareasPython-main\\utils\\file_io.py": {
+                "classes": {},
+                "functions": {
+                    "exportTasks": "session = Session()\n    tasks = session.query(Task).all()\n    with open(filepath, 'w') as file:\n        json.dump([\n            {\"id\": task.id, \"title\": task.title, \"description\": task.description, \"completed\": task.completed}\n            for task in tasks\n        ], file)",
+                    "importTasks": "session = Session()\n    with open(filepath, 'r') as file:\n        tasks = json.load(file)\n        for task_data in tasks:\n            task = Task(\n                id=task_data[\"id\"],\n                title=task_data[\"title\"],\n                description=task_data[\"description\"],\n                completed=task_data[\"completed\"]\n            )\n            session.merge(task)\n        session.commit()"
+                },
+                "imports": [
+                    "import json",
+                    "from db.models import Task, Session"
+                ]
+            }
+        }
     },
     {
-        "code": "public int multiplicar(int a, int b) { return a * b; }",
-        "doc": "/** Multiplica dos números y devuelve el resultado. */"
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpzr2wizoo\\zonaFit-main\\src\\main\\java\\zona_fit\\conexion\\Conexion.java": {
+                "classes": {
+                    "Conexion": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getConexion": "{\n        Connection conexion = null;\n        var baseDatos = \"zona_fit_db\";\n        var url = \"jdbc:mysql:\n        var usuario = \"root\";\n        var password = \"admin\";\n        try{\n            Class.forName(\"com.mysql.cj.jdbc.Driver\");\n            conexion = DriverManager.getConnection(url, usuario, password);\n        }catch (Exception e){\n            System.out.println(\"Error al conectarnos a la BD: \" + e.getMessage());\n        }\n        return conexion;\n    }",
+                            "main": "{\n        var conexion = Conexion.getConexion();\n        if(conexion != null)\n            System.out.println(\"Conexion exitosa: \" + conexion);\n        else\n            System.out.println(\"Error al conectarse\");\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import java.sql.Connection;",
+                    "import java.sql.DriverManager;"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpzr2wizoo\\zonaFit-main\\src\\main\\java\\zona_fit\\datos\\ClienteDAO.java": {
+                "classes": {
+                    "ClienteDAO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "listarClientes": "{\n        List<Cliente> clientes = new ArrayList<>();\n        PreparedStatement ps;\n        ResultSet rs;\n        Connection con = getConexion();\n        var sql = \"SELECT * FROM cliente ORDER BY id\";\n        try {\n            ps = con.prepareStatement(sql);\n            rs = ps.executeQuery();\n            while (rs.next()) {\n                var cliente = new Cliente();\n                cliente.setId(rs.getInt(\"id\"));\n                cliente.setNombre(rs.getString(\"nombre\"));\n                cliente.setApellido(rs.getString(\"apellido\"));\n                cliente.setMembresia(rs.getInt(\"membresia\"));\n                clientes.add(cliente);\n            }\n        } catch (Exception e) {\n            System.out.println(\"Error al listar clientes: \" + e.getMessage());\n        } finally {\n            try {\n                con.close();\n            } catch (Exception e) {\n                System.out.println(\"Error al cerrar conexion: \" + e.getMessage());\n            }\n        }\n        return clientes;\n    }",
+                            "buscarClientePorId": "{\n        PreparedStatement ps;\n        ResultSet rs;\n        var con = getConexion();\n        var sql = \"SELECT * FROM cliente Where id = ?\";\n        try {\n            ps = con.prepareStatement(sql);\n            ps.setInt(1, cliente.getId());\n            rs = ps.executeQuery();\n            if (rs.next()) {\n                cliente.setNombre(rs.getString(\"nombre\"));\n                cliente.setApellido(rs.getString(\"apellido\"));\n                cliente.setMembresia(rs.getInt(\"membresia\"));\n                return true;\n            }\n        } catch (Exception e) {\n            System.out.println(\"Error al recuperar cliente por id: \" + e.getMessage());\n        } finally {\n            try {\n                con.close();\n            } catch (Exception e) {\n                System.out.println(\"Error al cerrar conexion: \" + e.getMessage());\n            }\n        }\n        return false;\n    }",
+                            "agregarCliente": "{\n        PreparedStatement ps;\n        Connection con = getConexion();\n        String sql = \"INSERT INTO cliente(nombre, apellido, membresia) \"\n                + \" VALUES(?, ?, ?)\";\n        try {\n            ps = con.prepareStatement(sql);\n            ps.setString(1, cliente.getNombre());\n            ps.setString(2, cliente.getApellido());\n            ps.setInt(3, cliente.getMembresia());\n            ps.execute();\n            return true;\n        } catch (Exception e) {\n            System.out.println(\"Error al agregar cliente: \" + e.getMessage());\n        } finally {\n            try {\n                con.close();\n            } catch (Exception e) {\n                System.out.println(\"Error al cerrar conexion: \" + e.getMessage());\n            }\n        }\n        return false;\n    }",
+                            "modificarCliente": "{\n        PreparedStatement ps;\n        Connection con = getConexion();\n        var sql = \"UPDATE cliente SET nombre=?, apellido=?, membresia=? \" + \" WHERE id = ?\";\n        try {\n            ps = con.prepareStatement(sql);\n            ps.setString(1, cliente.getNombre());\n            ps.setString(2, cliente.getApellido());\n            ps.setInt(3, cliente.getMembresia());\n            ps.setInt(4, cliente.getId());\n            ps.execute();\n            return true;\n        } catch (Exception e) {\n            System.out.println(\"Error al modificar cliente: \" + e.getMessage());\n        } finally {\n            try {\n                con.close();\n            } catch (Exception e) {\n                System.out.println(\"Error al cerrar conexion: \" + e.getMessage());\n            }\n        }\n        return false;\n    }",
+                            "eliminarCliente": "{\n        PreparedStatement ps;\n        Connection con = getConexion();\n        var sql = \"DELETE FROM cliente WHERE id = ?\";\n        try {\n            ps = con.prepareStatement(sql);\n            ps.setInt(1, cliente.getId());\n            ps.execute();\n            return true;\n        } catch (Exception e) {\n            System.out.println(\"Error al eliminar cliente: \" + e.getMessage());\n        } finally {\n            try {\n                con.close();\n            } catch (Exception e) {\n                System.out.println(\"Error al cerrar conexion: \" + e.getMessage());\n            }\n        }\n        return false;\n    }",
+                            "main": "{\n        IClienteDAO clienteDao = new ClienteDAO();\n\n        \n\n\n\n\n\n\n\n\n        \n\n\n\n\n\n\n\n        \n\n\n\n\n\n\n\n        \n        var clienteEliminar = new Cliente(5);\n        var eliminado = clienteDao.eliminarCliente(clienteEliminar);\n        if (eliminado)\n            System.out.println(\"Cliente eliminado: \" + clienteEliminar);\n        else\n            System.out.println(\"No se elimino cliente: \" + clienteEliminar);\n\n\n        \n        System.out.println(\"*** Listar Clientes ***\");\n        var clientes = clienteDao.listarClientes();\n        clientes.forEach(System.out::println);\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import zona_fit.conexion.Conexion;",
+                    "import zona_fit.dominio.Cliente;",
+                    "import javax.xml.transform.Source;",
+                    "import java.sql.Connection;",
+                    "import java.sql.PreparedStatement;",
+                    "import java.sql.ResultSet;",
+                    "import java.util.ArrayList;",
+                    "import java.util.List;",
+                    "import static zona_fit.conexion.Conexion.getConexion;"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpzr2wizoo\\zonaFit-main\\src\\main\\java\\zona_fit\\datos\\IClienteDAO.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import zona_fit.dominio.Cliente;",
+                    "import java.util.List;"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpzr2wizoo\\zonaFit-main\\src\\main\\java\\zona_fit\\dominio\\Cliente.java": {
+                "classes": {
+                    "Cliente": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "getNombre": "{\n        return nombre;\n    }",
+                            "setNombre": "{\n        this.nombre = nombre;\n    }",
+                            "getApellido": "{\n        return apellido;\n    }",
+                            "setApellido": "{\n        this.apellido = apellido;\n    }",
+                            "getMembresia": "{\n        return membresia;\n    }",
+                            "setMembresia": "{\n        this.membresia = membresia;\n    }",
+                            "toString": "{\n        return \"Cliente{\" +\n                \"id=\" + id +\n                \", nombre='\" + nombre + '\\'' +\n                \", apellido='\" + apellido + '\\'' +\n                \", membresia=\" + membresia +\n                '}';\n    }",
+                            "equals": "{\n        if (this == o) return true;\n        if (o == null || getClass() != o.getClass()) return false;\n        Cliente cliente = (Cliente) o;\n        return id == cliente.id && membresia == cliente.membresia && Objects.equals(nombre, cliente.nombre) && Objects.equals(apellido, cliente.apellido);\n    }",
+                            "hashCode": "{\n        return Objects.hash(id, nombre, apellido, membresia);\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import java.util.Objects;"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpzr2wizoo\\zonaFit-main\\src\\main\\java\\zona_fit\\presentacion\\ZonaFitApp.java": {
+                "classes": {
+                    "ZonaFitApp": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "main": "{\n        zonaFitApp();\n    }",
+                            "zonaFitApp": "{\n        var salir = false;\n        var consola = new Scanner(System.in);\n        \n        IClienteDAO clienteDao = new ClienteDAO();\n        while(!salir){\n            try{\n                var opcion = mostrarMenu(consola);\n                salir = ejecutarOpciones(consola, opcion, clienteDao);\n            }catch (Exception e){\n                System.out.println(\"Error al ejecutar opciones: \" + e.getMessage());\n            }\n            System.out.println();\n        }\n    }",
+                            "mostrarMenu": "{\n        System.out.print(\"\"\"\n                *** Zona Fit (GYM)\n                1. Listar Clientes\n                2. Buscar Cliente\n                3. Agregar Cliente\n                4. Modificar Cliente\n                5. Eliminar Cliente\n                6. Salir\n                Elije una opcion:\\s\"\"\");\n        return Integer.parseInt(consola.nextLine());\n    }",
+                            "ejecutarOpciones": "{\n        var salir = false;\n        switch (opcion){\n            case 1 -> { \n                System.out.println(\"--- Listado de Clientes ---\");\n                var clientes = clienteDAO.listarClientes();\n                clientes.forEach(System.out::println);\n            }\n            case 2 ->{ \n                System.out.print(\"Introduce el id del Cliente a buscar: \");\n                var idCliente = Integer.parseInt(consola.nextLine());\n                var cliente = new Cliente(idCliente);\n                var encontrado = clienteDAO.buscarClientePorId(cliente);\n                if(encontrado)\n                    System.out.println(\"Cliente encontrado: \" + cliente);\n                else\n                    System.out.println(\"Cliente NO encontrado: \" + cliente);\n\n            }\n            case 3 -> { \n                System.out.println(\"--- Agregar Cliente ---\");\n                System.out.print(\"Nombre: \");\n                var nombre = consola.nextLine();\n                System.out.print(\"Apellido: \");\n                var apellido = consola.nextLine();\n                System.out.print(\"Membresia: \");\n                var membresia = Integer.parseInt(consola.nextLine());\n                \n                var cliente = new Cliente(nombre, apellido, membresia);\n                var agregado = clienteDAO.agregarCliente(cliente);\n                if(agregado)\n                    System.out.println(\"Cliente agregado: \" + cliente);\n                else\n                    System.out.println(\"Cliente NO agregado: \" + cliente);\n            }\n            case 4 -> { \n                System.out.println(\"--- Modificar Cliente ---\");\n                System.out.print(\"Id Cliente: \");\n                var idCliente = Integer.parseInt(consola.nextLine());\n                System.out.print(\"Nombre: \");\n                var nombre = consola.nextLine();\n                System.out.print(\"Apellido: \");\n                var apellido = consola.nextLine();\n                System.out.print(\"Membresia: \");\n                var membresia = Integer.parseInt(consola.nextLine());\n                \n                var cliente = new Cliente(idCliente, nombre, apellido, membresia);\n                var modificado = clienteDAO.modificarCliente(cliente);\n                if(modificado)\n                    System.out.println(\"Cliente modificado: \" + cliente);\n                else\n                    System.out.println(\"Cliente NO modificado: \" + cliente);\n            }\n            case 5 -> { \n                System.out.println(\"--- Eliminar Cliente ---\");\n                System.out.print(\"Id Cliente: \");\n                var idCliente = Integer.parseInt(consola.nextLine());\n                var cliente = new Cliente(idCliente);\n                var eliminado = clienteDAO.eliminarCliente(cliente);\n                if(eliminado)\n                    System.out.println(\"Cliente Eliminado: \" + cliente);\n                else\n                    System.out.println(\"Cliente NO eliminado: \" + cliente);\n            }\n            case 6 -> { \n                System.out.println(\"Hasta pronto!\");\n                salir = true;\n            }\n            default -> System.out.println(\"Opcion no reconocida: \" + opcion);\n        }\n        return salir;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import zona_fit.datos.ClienteDAO;",
+                    "import zona_fit.datos.IClienteDAO;",
+                    "import zona_fit.dominio.Cliente;",
+                    "import java.util.Scanner;"
+                ]
+            }
+        }
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\eslint.config.js": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import js from '@eslint/js'",
+                    "import globals from 'globals'",
+                    "import react from 'eslint-plugin-react'",
+                    "import reactHooks from 'eslint-plugin-react-hooks'",
+                    "import reactRefresh from 'eslint-plugin-react-refresh'"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\postcss.config.js": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\tailwind.config.js": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\vite.config.js": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import { defineConfig, loadEnv } from 'vite'",
+                    "import react from '@vitejs/plugin-react-swc'"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\app.cjs": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\diagramaColecciones.cjs": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import { ObjectId } from \"mongodb\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\main.cjs": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\router.cjs": {
+                "classes": {
+                    "": {
+                        "docstring": "No docstring",
+                        "methods": {}
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\controller\\boleta.controller.cjs": {
+                "classes": {
+                    "": {
+                        "docstring": "No docstring",
+                        "methods": {}
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\controller\\funcion.controller.cjs": {
+                "classes": {
+                    "": {
+                        "docstring": "No docstring",
+                        "methods": {}
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\controller\\movimiento.controller.cjs": {
+                "classes": {
+                    "": {
+                        "docstring": "No docstring",
+                        "methods": {}
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\controller\\pelicula.controller.cjs": {
+                "classes": {
+                    "": {
+                        "docstring": "No docstring",
+                        "methods": {}
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\controller\\sala.controller.cjs": {
+                "classes": {
+                    "": {
+                        "docstring": "No docstring",
+                        "methods": {}
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\controller\\tarjeta.controller.cjs": {
+                "classes": {
+                    "": {
+                        "docstring": "No docstring",
+                        "methods": {}
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\controller\\usuario.controller.cjs": {
+                "classes": {
+                    "": {
+                        "docstring": "No docstring",
+                        "methods": {}
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\dto\\boleta.dto.cjs": {
+                "classes": {
+                    "BoletaDTO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "usuarioIdToIdKey": "{\n        arg._id = arg.cliente_id\n        delete arg.cliente_id\n        return arg;\n    }",
+                            "templateTicketSaved": "{\n        return {\n            status: 201,\n            data: arg\n        }\n    }",
+                            "templateTicketError": "{\n        return {\n            status: 500,\n            message: \"Ocurrio un error\",\n            data: arg\n        }\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\dto\\funcion.dto.cjs": {
+                "classes": {
+                    "FuncionDTO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "precioPreferencial": "{\n        arg.precio = arg.precio+((arg.precio)*0.2)\n        return arg\n    }",
+                            "precioVip": "{\n        arg.precio = arg.precio-((arg.precio)*0.2)\n        return arg\n    }",
+                            "funcionIdToIdKey": "{\n        arg._id = arg.funcion_id\n        delete arg.funcion_id\n        return arg;\n    }",
+                            "idKeyToFuncionId": "{\n        arg.funcion_id = arg._id\n        delete arg._id\n        return arg;\n    }",
+                            "fromHexStringToObjectId": "{\n        arg._id = new ObjectId(arg._id)\n        return arg\n    }",
+                            "fromHexStringToObjectIdFuncion": "{\n        arg.funcion_id = new ObjectId(arg.funcion_id)\n        return arg\n    }",
+                            "templateExistFunction": "{\n        return {\n            status: 200,\n            data: arg\n        }\n    }",
+                            "templateNotFunctions": "{\n        return {\n            status: 404,\n            message: \"No hay funciones registradas\"\n        }\n    }",
+                            "templateNotSeating": "{\n        return {\n            status: 404,\n            message: \"No hay asientos disponibles\"\n        }\n    }",
+                            "templateSeating": "{\n        return {\n            status: 200,\n            data: arg\n        }\n    }",
+                            "templateContinueWithSameObj": "{\n        return arg\n    }",
+                            "templateContinue": "{\n        return {\n            status: 100,\n            message: \"Continue con el proceso\"\n        }\n    }",
+                            "templateAsientoPrice": "{\n        return {\n            status: 200,\n            message: \"El valor del asiento solicitado es el siguiente\",\n            precio: arg\n        }\n    }",
+                            "templateAsientosPrice": "{\n        return {\n            status: 200,\n            message: \"El valor de los asiento solicitados es el siguiente\",\n            precio: arg\n        }\n    }",
+                            "templatePrecioCero": "{\n        return {\n            status: 200,\n            message: \"No hay asientos seleccionados\",\n            precio: 0\n        }\n    }",
+                            "templateIncorrectPaymente": "{\n        return {\n            status: 400,\n            message: \"El monto enviado no es el correcto, intentelo denuevo e ingrese el monto correctamente\"\n        }\n    }",
+                            "templateFuncionError": "{\n        return {\n            status: 500,\n            message: \"Ocurrio un error\",\n            data: arg\n        }\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\dto\\movimiento.dto.cjs": {
+                "classes": {
+                    "MovimientoDTO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "movimientoIdToIdKey": "{\n        arg._id = arg.movimiento_id\n        delete arg.movimiento_id\n        return arg;\n    }",
+                            "fromHexStringToObjectId": "{\n        arg.cliente_id = new ObjectId(arg.cliente_id)\n        return arg\n    }",
+                            "fromHexStringToObjectIdMovimiento": "{\n        arg.movimiento_id = new ObjectId(arg.movimiento_id)\n        return arg\n    }",
+                            "templateExistMovimiento": "{\n        return {\n            status: 200,\n            data: arg\n        }\n    }",
+                            "templateNotMovimiento": "{\n        return {\n            status: 404,\n            message: \"No hay movimientos registrados\"\n        }\n    }",
+                            "templateMovimientoSaved": "{\n        return {\n            status: 201,\n            data: arg\n        }\n    }",
+                            "templateMovimientoError": "{\n        return {\n            status: 500,\n            message: \"Ocurrio un error\",\n            data: arg\n        }\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\dto\\pelicula.dto.cjs": {
+                "classes": {
+                    "PeliculaDTO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "fromHexStringToObjectId": "{\n        arg._id = new ObjectId(arg._id)\n        return arg\n    }",
+                            "fromObjectIdToHexString": "{\n        return arg.data.map(obj => {\n            const newObj = { ...obj };\n            Object.keys(newObj).forEach(key => {\n                if (key.includes('_id') && newObj[key] instanceof ObjectId) {\n                    newObj[key] = newObj[key].toString();\n                }\n            });\n            return newObj;\n        });\n    }",
+                            "templateMoviesExist": "{\n        return {\n            status: 200,\n            data: arg\n        }\n    }",
+                            "templateNotMovies": "{\n        return {\n            status: 404,\n            message: \"No hay peliculas disponibles\"\n        }\n    }",
+                            "templateNotMovie": "{\n        return {\n            status: 404,\n            message: \"La pelicula no esta registrada\"\n        }\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\dto\\tarjeta.dto.cjs": {
+                "classes": {
+                    "TarjetaDTO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "usuarioIdToIdKey": "{\n        arg._id = arg.cliente_id\n        delete arg.cliente_id\n        return arg;\n    }",
+                            "fromHexStringToObjectId": "{\n        arg.cliente_id = new ObjectId(arg.cliente_id)\n        return arg\n    }",
+                            "templateNotCards": "{\n        return {\n            status: 404,\n            message: \"No hay tarjetas registradas\"\n        }\n    }",
+                            "templateExistCard": "{\n        return {\n            status: 200,\n            data: arg\n        }\n    }",
+                            "templateTarjetaSaved": "{\n        return {\n            status: 201,\n            data: arg\n        }\n    }",
+                            "templareTarjetaDuplicated": "{\n        return {\n            status: 409,\n            message: \"Ya existe una tarjeta con este numero\"\n        }\n    }",
+                            "templateTarjetaError": "{\n        return {\n            status: 500,\n            message: \"Ocurrio un error\",\n            data: arg\n        }\n    }",
+                            "templateBadCredentials": "{\n        return {\n            status: 401,\n            message: \"Sus credenciales no son validas para realizar este proceso\"\n        }\n    }",
+                            "templateContinue": "{\n        return {\n            status: 100,\n            message: \"Todo va bien, continue con el proceso\"\n        }\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\dto\\usuario.dto.cjs": {
+                "classes": {
+                    "UsuarioDTO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "typeToRole": "{\n        if(arg.tipo == \"Admin\"){\n            arg.tipo = \"Administrador\"\n        } else if(arg.tipo == \"Estandar\"){\n            arg.tipo = \"usuarioEstandar\"\n        } else if(arg.tipo == \"VIP\"){\n            arg.tipo = \"usuarioVIP\"\n        }\n        return {\n            ...arg,\n            tipo: arg.tipo\n        }\n    }",
+                            "roleToType": "{\n        if(arg.tipo == \"Administrador\"){\n            arg.tipo = \"Admin\"\n        } else if(arg.tipo == \"usuarioEstandar\"){\n            arg.tipo = \"Estandar\"\n        } else if(arg.tipo == \"usuarioVIP\"){\n            arg.tipo = \"VIP\"\n        }\n        return {\n            ...arg,\n            tipo: arg.tipo\n        }\n    }",
+                            "mongoUserToObject": "{\n        return {\n            nick: arg\n        }\n    }",
+                            "changeRole": "{\n        if(arg.tipo == \"usuarioEstandar\"){\n            arg.tipo = \"usuarioVIP\"\n        } else if(arg.tipo == \"usuarioVIP\"){\n            arg.tipo = \"usuarioEstandar\"\n        }\n        return {\n            ...arg,\n            tipo: arg.tipo\n        }\n    }",
+                            "usuarioIdToIdKey": "{\n        arg._id = arg.cliente_id\n        delete arg.cliente_id\n        return arg;\n    }",
+                            "idKeyToUsuarioId": "{\n        arg.cliente_id = arg._id\n        delete arg._id\n        return arg;\n    }",
+                            "templateNotUsers": "{\n        return {\n            status: 404,\n            message: \"No hay usuarios registrados\"\n        }\n    }",
+                            "templateUserError": "{\n        return {\n            status: 500,\n            message: \"Ocurrio un error\",\n            data: arg\n        }\n    }",
+                            "templateExistUser": "{\n        return {\n            status: 200,\n            data: arg\n        }\n    }",
+                            "templateUserSaved": "{\n        return {\n            status: 201,\n            data: arg\n        }\n    }",
+                            "templateListUsers": "{\n        return {\n            status: 200,\n            data: arg\n        }\n    }",
+                            "templateBadRequest": "{\n        return {\n            status: 400,\n            message: \"La consulta esta mal dise\u00f1ada\"\n        }\n    }",
+                            "templateBadCredentials": "{\n        return {\n            status: 401,\n            message: \"Sus credenciales no son validas para realizar este proceso\"\n        }\n    }",
+                            "templateContinue": "{\n        return {\n            status: 100,\n            message: \"Todo va bien, continue con el proceso\"\n        }\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\helpers\\db\\connect.cjs": {
+                "classes": {
+                    "Connect": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "constructor": "{\n        this.user = process.env.VITE_MONGO_USER;\n        this.port = process.env.VITE_MONGO_PORT;\n        this.setPass = process.env.VITE_MONGO_PWD;\n        this.setHost = process.env.VITE_MONGO_HOST;\n        this.setCluster = process.env.VITE_MONGO_CLUSTER;\n        this.setDbName = process.env.VITE_MONGO_DB;\n        this.\n        this.db = this.conexion.db(this.getDbName);\n    }",
+                            "setPass": "{\n        this.\n    }",
+                            "setHost": "{\n        this.\n    }",
+                            "setCluster": "{\n        this.\n    }",
+                            "setDbName": "{\n        this.\n    }",
+                            "getPass": "{\n        return this.\n    }",
+                            "getHost": "{\n        return this.\n    }",
+                            "getCluster": "{\n        return this.\n    }",
+                            "getDbName": "{\n        return this.\n    }",
+                            "reconnect": "{\n        await this.\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\model\\boleta.model.cjs": {
+                "classes": {
+                    "Boleta": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "constructor": "{\n        if (typeof Boleta.instanceBoleta === \"object\") {\n            return Boleta.instanceBoleta;\n        }\n        super();\n        this.collection = this.db.collection(\"boleta\");\n        Boleta.instanceBoleta = this;\n        return this;\n    }",
+                            "findOneBoleta": "{\n        let res = await this.collection.findOne(boletaParametro)\n        return res\n    }",
+                            "insertBoleta": "{\n        let {movimiento_id, funcion_id, asiento} = arg\n        let res = await this.collection.insertOne({\n            movimiento_id,\n            funcion_id,\n            asiento\n        })\n        return res\n    }",
+                            "updateBoleta": "{\n        let res = await this.collection.updateOne(boletaFilter, boletaParametro)\n        return res\n    }",
+                            "deleteBoleta": "{\n        let res = await this.collection.deleteOne(boletaParametro)\n        return res\n    }",
+                            "aggregateBoleta": "{\n        let [res] = await this.collection.aggregate(boletaParametro).toArray()\n        return res\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\model\\funcion.model.cjs": {
+                "classes": {
+                    "Funcion": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "constructor": "{\n        if (typeof Funcion.instanceFuncion === \"object\") {\n            return Funcion.instanceFuncion;\n        }\n        super();\n        this.collection = this.db.collection(\"funcion\");\n        Funcion.instanceFuncion = this;\n        return this;\n    }",
+                            "findFuncion": "{\n        let res = await this.collection.find(funcionParametro).toArray()\n        return res\n    }",
+                            "findFuncionById": "{\n        let [res] = await this.collection.find({_id: arg._id}).toArray()\n        return res\n    }",
+                            "insertFuncion": "{\n        let res = await this.collection.insertOne(funcionParametro)\n        return res\n    }",
+                            "updateFuncionQuitarAsiento": "{\n        let res = await this.collection.updateOne(\n            {_id: arg.funcion_id},\n            {$pull: {asientos: arg.asiento}}\n        )\n        return res\n    }",
+                            "aggregateFuncion": "{\n        let [res] = await this.collection.aggregate([\n            {\n                $match: {\n                    _id: arg._id\n                }\n            },\n            {\n                $lookup: {\n                    from: \"sala\",\n                    localField: \"sala_id\",\n                    foreignField: \"_id\",\n                    as: \"sala_info\"\n                }\n            },\n            {\n                $unwind: {\n                    path: \"$sala_info\",\n                    preserveNullAndEmptyArrays: false\n                }\n            },\n            {\n                $addFields: {\n                    sala_nombre: \"$sala_info.nombre\",\n                    sala_asientos: \"$sala_info.asientos\",\n                    precio: \"$sala_info.precio\",\n                    sala_tipo: \"$sala_info.tipo\",\n                    preferencial: \"$sala_info.preferencial\"\n                }\n            },\n            {\n                $project: {\n                    sala_info: 0\n                }\n            }\n        ]).toArray();\n        return res\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\model\\movimiento.model.cjs": {
+                "classes": {
+                    "Movimiento": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "constructor": "{\n        if (typeof Movimiento.instanceMovimiento === \"object\") {\n            return Movimiento.instanceMovimiento;\n        }\n        super();\n        this.collection = this.db.collection(\"movimiento\");\n        Movimiento.instanceMovimiento = this;\n        return this;\n    }",
+                            "findOneMovimiento": "{\n        let [res] = await this.collection.find({\n            _id: arg._id\n        }).toArray()\n        return res\n    }",
+                            "insertMovimiento": "{\n        let { cliente_id, monto_COP } = arg\n        let res = await this.collection.insertOne({\n            cliente_id,\n            monto_COP\n        })\n        return res\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\model\\pelicula.model.cjs": {
+                "classes": {
+                    "Pelicula": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "constructor": "{\n        if (typeof Pelicula.instancePelicula === \"object\") {\n            return Pelicula.instancePelicula;\n        }\n        super();\n        this.collection = this.db.collection(\"pelicula\");\n        Pelicula.instancePelicula = this;\n        return this;\n    }",
+                            "findPeliculas": "{\n        let res = await this.collection.find({$and: [{estreno: {$lt: new Date()}}, {retiro: {$gt: new Date()}}]},{projection: { titulo: 1, genero: 1, imagen: 1 }  }).toArray()\n        return res\n    }",
+                            "findPeliculasCoomingSoon": "{\n        let res = await this.collection.find({estreno: {$gt: new Date()}},{projection: { titulo: 1, genero: 1, imagen: 1 }  }).toArray()\n        return res\n    }",
+                            "findPeliculaById": "{\n        let res = await this.collection.findOne(peliculaParametro)\n        return res\n    }",
+                            "insertPelicula": "{\n        let res = await this.collection.insertOne(peliculaParametro)\n        return res\n    }",
+                            "listarPeliculas": "{\n        let res = await this.collection.aggregate([\n            {$lookup: {from: \"funcion\", localField: \"_id\", foreignField: \"pelicula_id\", as: \"funciones\"}},\n            {$match: {$and: [{estreno: {$lte: new Date()}},{retiro: {$gte: new Date()}}]}},\n            {$unwind: \"$funciones\"},\n            {$project: {sinopsis: 0, estreno: 0, retiro: 0, \"funciones.pelicula_id\": 0, \"funciones.sala_id\": 0}}\n        ]).toArray()\n        return res\n    }",
+                            "detallesPelicula": "{\n        let res = await this.collection.aggregate([\n            {$match: {_id: arg._id}},\n            {$lookup: {from: \"funcion\", localField: \"_id\", foreignField: \"pelicula_id\", as: \"funciones\"}},\n            {$match: {$and: [{estreno: {$lte: new Date()}},{retiro: {$gte: new Date()}}]}},\n            {$unwind: \"$funciones\"},\n            {$addFields: {\"funciones.funcion_id\": \"$funciones._id\"}},\n            { $project: { \"funciones._id\": 0 }},\n            {$replaceRoot: {newRoot: {$mergeObjects: [\"$$ROOT\", \"$funciones\"]}}},\n            {$lookup: {from: \"sala\", localField: \"sala_id\", foreignField: \"_id\", as: \"salas\"}},\n            {$unwind: \"$salas\"},\n            {$addFields: {\"salas.sala_id\": \"$salas._id\"}},\n            {$addFields: {\"salas.sala_asientos\": \"$salas.asientos\"}},\n            {$project: { \"salas._id\": 0 , \"salas.asientos\": 0}},\n            {$replaceRoot: {newRoot: {$mergeObjects: [\"$$ROOT\", \"$salas\"]}}},\n            {$project: {\"funciones\": 0, \"salas\": 0 }}\n        ]).toArray()\n        return res\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\model\\sala.model.cjs": {
+                "classes": {
+                    "Sala": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "constructor": "{\n        if (typeof Sala.instanceSala === \"object\") {\n            return Sala.instanceSala;\n        }\n        super();\n        this.collection = this.db.collection(\"sala\");\n        Sala.instanceSala = this;\n        return this;\n    }",
+                            "findSala": "{\n        let res = await this.collection.find(salaParametro).toArray()\n        return res\n    }",
+                            "findSalaById": "{\n        let res = await this.collection.findOne(salaParametro)\n        return res\n    }",
+                            "insertSala": "{\n        let res = await this.collection.insertOne(salaParametro)\n        return res\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\model\\tarjeta.model.cjs": {
+                "classes": {
+                    "Tarjeta": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "constructor": "{\n        if (typeof Tarjeta.instanceTarjeta === \"object\") {\n            return Tarjeta.instanceTarjeta;\n        }\n        super();\n        this.collection = this.db.collection(\"tarjeta\");\n        Tarjeta.instanceSala = this;\n        return this;\n    }",
+                            "findOneTarjetaByNumber": "{\n        let [res] = await this.collection.find({\n            numero: arg.numero\n        }).toArray()\n        return res\n    }",
+                            "insertTarjeta": "{\n        let { cliente_id, numero } = arg\n        let res = await this.collection.insertOne({\n            cliente_id,\n            numero\n        });\n        return res\n    }",
+                            "deleteTarjeta": "{\n        let res = await this.collection.deleteOne(tarjetaParametro)\n        return res\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\model\\usuario.model.cjs": {
+                "classes": {
+                    "Cliente": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "constructor": "{\n        if (typeof Cliente.instanceCliente === \"object\") {\n            return Cliente.instanceCliente;\n        }\n        super();\n        this.collection = this.db.collection(\"cliente\");\n        Cliente.instanceCliente = this;\n        return this;\n    }",
+                            "insertCliente": "{\n        let res = await this.collection.insertOne(clienteParametro)\n        return res\n    }",
+                            "commandUsuario": "{\n        let res = await this.db.command(usuarioParametro)\n        return res\n    }",
+                            "findOneClienteByNickOrEmail": "{\n        let [res] = await this.collection.find({\n            $or: [\n                { nick: arg.nick },\n                { email: arg.email }\n            ]\n        }).toArray()\n        return res\n    }",
+                            "findOneClienteById": "{\n        let [res] = await this.collection.find({\n            _id: arg._id\n        }).toArray()\n        return res\n    }",
+                            "saveUsuario": "{\n        let { nombre, apellido, nick, email, telefono, tipo } = arg;\n        let res = await this.collection.insertOne({\n            nombre,\n            apellido,\n            nick,\n            email,\n            telefono,\n            tipo\n        });\n        return res\n    }",
+                            "createUsuarioCliente": "{\n        let res = await this.db.command({\n            createUser: arg.nick,\n            pwd: arg.pwd,\n            roles: [\n                { role: \"read\", db: process.env.MONGO_DB },\n                { role: arg.tipo, db: process.env.MONGO_DB },\n                { role: \"dbAdmin\", db: process.env.MONGO_DB }\n            ]\n        })\n        return res\n    }",
+                            "createUsuarioAdmin": "{\n        let res = await this.db.command({\n            createUser: arg.nick,\n            pwd: arg.pwd,\n            roles: [\n                { role: \"readWrite\", db: process.env.MONGO_DB },\n                { role: arg.tipo, db: process.env.MONGO_DB },\n                { role: \"dbAdmin\", db: process.env.MONGO_DB },\n                { role: \"userAdminAnyDatabase\", db: \"admin\" },\n                { role: \"dbAdminAnyDatabase\", db: \"admin\" }\n            ]\n        })\n        return res\n    }",
+                            "revokeRolesFromUsuario": "{\n        let res = await this.db.command({\n            revokeRolesFromUser: arg.nick,\n            roles: [\n                { role: arg.tipo, db: process.env.MONGO_DB }\n            ]\n        })\n        return res\n    }",
+                            "grantRolesToUsuario": "{\n        let res = await this.db.command({\n            grantRolesToUser: arg.nick,\n            roles: [\n                { role: arg.tipo, db: process.env.MONGO_DB }\n            ]\n        })\n        return res\n    }",
+                            "findClientes": "{\n        let res = await this.collection.find({}).toArray()\n        return res\n    }",
+                            "findClientesByType": "{\n        let res = await this.collection.find({\n            tipo: arg\n        }).toArray()\n        return res\n    }",
+                            "updateCliente": "{\n        let res = await this.collection.updateOne(\n            { nick: arg.nick},\n            {$set: {tipo: arg.tipo}}\n        )\n        return res\n    }",
+                            "aggregateCliente": "{\n        let res = await this.collection.aggregate(clienteParametro).toArray()\n        return res\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\validators\\boleta.validator.cjs": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\validators\\funcion.validator.cjs": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\validators\\movimiento.validator.cjs": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\validators\\pelicula.validator.cjs": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\validators\\tarjeta.validator.cjs": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\api\\validators\\usuario.validator.cjs": {
+                "classes": {},
+                "functions": {},
+                "imports": []
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\app.jsx": {
+                "classes": {},
+                "functions": {
+                    "App": ""
+                },
+                "imports": [
+                    "import { createBrowserRouter, RouterProvider } from \"react-router-dom\"",
+                    "import { Index } from \"./views\"",
+                    "import { Ejemplo, loader } from \"./views/movieExample\"",
+                    "import { MovieDetails, movieLoader } from \"./views/movie\"",
+                    "import { Function, functionLoader } from \"./views/funciones\"",
+                    "import { Payment, paymentLoader } from \"./views/payment\"",
+                    "import { Ticket, ticketLoader } from \"./views/ticket\""
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\main.jsx": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import React from \"react\";",
+                    "import ReactDOM from \"react-dom/client\";",
+                    "import { StrictMode } from \"react\";",
+                    "import { HeaderIndex } from \"./components/headerIndex\";",
+                    "import { NowPlaying } from \"./components/nowPlaying\";",
+                    "import { App } from \"./app\""
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\carousel.jsx": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import React, { useEffect, useState } from 'react';",
+                    "import { Link } from 'react-router-dom';"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\coomingSoon.jsx": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import React, { useEffect, useState } from 'react';",
+                    "import \"../../css/style.css\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\footerIndex.jsx": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import \"../../css/style.css\""
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\functionCart.jsx": {
+                "classes": {},
+                "functions": {
+                    "FunctionCard": ""
+                },
+                "imports": [
+                    "import \"../../css/style.css\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\functionDayCard.jsx": {
+                "classes": {},
+                "functions": {
+                    "FunctionDayCard": ""
+                },
+                "imports": [
+                    "import \"../../css/style.css\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\header.jsx": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import { Link } from 'react-router-dom';",
+                    "import \"../../css/style.css\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\headerIndex.jsx": {
+                "classes": {},
+                "functions": {
+                    "HeaderIndex": ""
+                },
+                "imports": [
+                    "import { HeaderUser } from \"./headerUser\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\headerUser.jsx": {
+                "classes": {},
+                "functions": {
+                    "HeaderUser": ""
+                },
+                "imports": [
+                    "import \"../../css/style.css\""
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\nowPlaying.jsx": {
+                "classes": {},
+                "functions": {
+                    "NowPlaying": ""
+                },
+                "imports": [
+                    "import React, { useEffect, useState } from \"react\";",
+                    "import { Carousel } from \"./carousel\";",
+                    "import \"../../css/style.css\""
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\seating.jsx": {
+                "classes": {},
+                "functions": {
+                    "Seating": ""
+                },
+                "imports": [
+                    "import { useState } from \"react\";",
+                    "import \"../../css/style.css\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\components\\timer.jsx": {
+                "classes": {},
+                "functions": {
+                    "Timer": ""
+                },
+                "imports": [
+                    "import React, { useEffect, useState } from \"react\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\views\\funciones.jsx": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import React, { useEffect, useState } from 'react';",
+                    "import { useLoaderData } from \"react-router\";",
+                    "import { Link } from 'react-router-dom';",
+                    "import \"../../css/style.css\";",
+                    "import { FunctionCard } from \"../components/functionCart\";",
+                    "import { FunctionDayCard } from \"../components/functionDayCard\";",
+                    "import { Header } from \"../components/header\";",
+                    "import { Seating } from \"../components/seating\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\views\\index.jsx": {
+                "classes": {},
+                "functions": {
+                    "Index": ""
+                },
+                "imports": [
+                    "import { HeaderIndex } from \"../components/headerIndex\";",
+                    "import { NowPlaying } from \"../components/nowPlaying\";",
+                    "import { CoomingSoon } from \"../components/coomingSoon\";",
+                    "import { FooterIndex } from \"../components/footerIndex\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\views\\movie.jsx": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import { useLoaderData } from \"react-router\";",
+                    "import { Link } from 'react-router-dom';",
+                    "import { Header } from \"../components/header\";",
+                    "import \"../../css/style.css\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\views\\movieExample.jsx": {
+                "classes": {},
+                "functions": {
+                    "enviar": ""
+                },
+                "imports": [
+                    "import { useLoaderData } from \"react-router\";",
+                    "import { Form } from \"react-router-dom\";"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\views\\payment.jsx": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import React, { useEffect, useState } from 'react';",
+                    "import { useLoaderData} from 'react-router-dom';",
+                    "import \"../../css/style.css\";",
+                    "import { Header } from \"../components/header\";",
+                    "import { Timer } from '../components/timer';"
+                ]
+            },
+            "C:/Users/Solvo/AppData/Local/Temp/tmpty541dpn\\CineCampus-main\\src\\views\\ticket.jsx": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import React, { useEffect, useState } from 'react';",
+                    "import { Link, useLoaderData } from 'react-router-dom';",
+                    "import \"../../css/style.css\";",
+                    "import { Header } from \"../components/header\";"
+                ]
+            }
+        }
     }
 ]
