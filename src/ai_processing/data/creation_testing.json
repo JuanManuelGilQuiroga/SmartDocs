@@ -1,0 +1,294 @@
+{
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\eslint.config.js": {
+        "classes": {},
+        "functions": {},
+        "imports": [
+            "import js from '@eslint/js'",
+            "import globals from 'globals'",
+            "import react from 'eslint-plugin-react'",
+            "import reactHooks from 'eslint-plugin-react-hooks'",
+            "import reactRefresh from 'eslint-plugin-react-refresh'"
+        ]
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\server.cjs": {
+        "classes": {},
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\vite.config.js": {
+        "classes": {},
+        "functions": {},
+        "imports": [
+            "import { defineConfig } from 'vite';",
+            "import react from '@vitejs/plugin-react-swc';"
+        ]
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\controllers\\productController.cjs": {
+        "classes": {
+            "ProductController": {
+                "docstring": "No docstring",
+                "methods": {
+                    "crearProducto": "{\n        try {\n            const errors = validationResult(req.body);\n            if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });\n            let productRepository = new ProductRepository()\n            const newProduct = await productRepository.save(req.body);\n            res.status(201).json({\n                status: 201,\n                data: newProduct\n            }) \n            console.log(newProduct)\n        } catch (error) {\n            const errorObj = JSON.parse(error.message);\n            res.status(errorObj.status).json(errorObj)\n        }\n    }",
+                    "listarProductos": "{\n        try {\n            let productRepository = new ProductRepository()\n            const product = await productRepository.getAllProducts();\n            console.log(product)\n            return res.status(201).json({ data: product });\n        } catch (error) {\n            const errorObj = JSON.parse(error.message);\n            console.log(errorObj)\n            res.status(errorObj.status).json(errorObj);\n        }\n    }",
+                    "editarProducto": "{\n        const productId = req.params.id;\n        const updatedData = req.body;\n    \n        try {\n            let productRepository = new ProductRepository();\n            const updatedProduct = await productRepository.edit(productId, updatedData);\n            res.status(200).json({\n                status: 200,\n                data: updatedProduct\n            });\n        } catch (error) {\n            console.error('Error en editarProducto:', error);\n            const errorObj = JSON.parse(error.message);\n            res.status(errorObj.status).json(errorObj);\n        }\n    }",
+                    "eliminarProducto": "{\n        try {\n            const { id } = req.params; \n            let productRepository = new ProductRepository();\n            await productRepository.remove(id); \n            res.status(204).send();\n        } catch (error) {\n            const errorObj = JSON.parse(error.message);\n            res.status(errorObj.status).json(errorObj);\n        }\n    }"
+                }
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\controllers\\userController.cjs": {
+        "classes": {
+            "UserController": {
+                "docstring": "No docstring",
+                "methods": {
+                    "constructor": "{\n        this.userRepository = new UserRepository();\n    }",
+                    "crearUsuario": "{\n        try {\n            const errors = validationResult(req);\n            if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });\n    \n            \n            console.log('Datos para verificar usuario:', req.body);\n            const userExist = await this.userRepository.getOneUserByNameEmailOrOauthId(req.body);\n            \n            if (userExist) {\n                console.log('Ya existe un usuario con ese email o nick');\n                return res.status(409).json({ message: 'Usuario ya registrado' });\n            }\n    \n            \n            const newUser = await this.userRepository.save(req.body);\n            return res.status(201).json(newUser);\n        } catch (error) {\n            const errorObj = JSON.parse(error.message);\n            res.status(errorObj.status).json({ message: errorObj.message });\n        }\n    }",
+                    "logUsuario": "{\n        try {\n            const { email, password } = req.body;\n            const user = await this.userRepository.getOneUserByNameEmail(email); \n            \n            if (!user) {\n                return res.status(404).json({ message: 'Usuario no encontrado' });\n            }\n            \n            \n            if (password !== user.password) {\n                return res.status(401).json({ message: 'Contrase\u00f1a incorrecta' });\n            }\n            \n            return res.status(200).json({ message: 'Usuario loggeado', user });\n        } catch (error) {\n            console.error(error); \n            res.status(500).json({ message: 'Error en el servidor' });\n        }\n    }"
+                }
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\middlewares\\authenticateToken.js": {
+        "classes": {},
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\middlewares\\passport.cjs": {
+        "classes": {
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\middlewares\\sessionLogin.js": {
+        "classes": {
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\routes\\auth.cjs": {
+        "classes": {
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\routes\\index.cjs": {
+        "classes": {
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\services\\productService.js": {
+        "classes": {
+            "ProductService": {
+                "docstring": "No docstring",
+                "methods": {
+                    "constructor": "{\n        this.productRepository = new ProductRepository();\n    }",
+                    "getAllProducts": "{\n        const product = await this.productRepository.get();\n        if (!product) {\n            throw new Error(JSON.stringify({status: 404, message: 'Product not found'}));\n        }\n        return product;\n    }"
+                }
+            },
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\services\\userService.js": {
+        "classes": {
+            "UserService": {
+                "docstring": "No docstring",
+                "methods": {
+                    "constructor": "{\n        this.userRepository = new UserRepository();\n    }",
+                    "getUserById": "{\n        const user = await this.userRepository.getById(id);\n        if (!user) {\n            throw new Error(JSON.stringify({status: 404, message: 'User not found'}));\n        }\n        return user;\n    }",
+                    "createUser": "{\n        \n        return await this.userRepository.save(data);\n    }",
+                    "getUserByNickAndPassword": "{\n        const [user] = await this.userRepository.getNick(body);\n\n        if(!user) throw new Error(JSON.stringify({status: 404, message: 'usuario service'}));\n        const token = await this.userRepository.getPassword(body.password, user);\n        if(!token) throw new Error(JSON.stringify({status: 404, message: 'password service'}));\n        return token\n    }",
+                    "updateUser": "{\n        const updatedUser = await this.userRepository.updateById(id, data);\n        if (!updatedUser) {\n            throw new Error(JSON.stringify({status: 404, message: 'User not found or could not be updated'}));\n        }\n        return updatedUser;\n    }",
+                    "deleteUser": "{\n        const deletedUser = await this.userRepository.deleteById(id);\n        if (!deletedUser) {\n            throw new Error(JSON.stringify({status: 404, message: 'User not found or could not be deleted'}));\n        }        \n        return deletedUser;\n    }",
+                    "searchUsersByName": "{\n        return await this.userRepository.searchByName(name);\n    }"
+                }
+            },
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\src\\App.jsx": {
+        "classes": {},
+        "functions": {
+            "App": ""
+        },
+        "imports": [
+            "import React from 'react';",
+            "import { createBrowserRouter, Navigate, RouterProvider } from \"react-router-dom\"",
+            "import './Login.css';",
+            "import {LogIn} from './components/logIn';",
+            "import { Profile, productsLoader, productsAction } from './components/profile';",
+            "import { Register, registerAction } from './components/register';"
+        ]
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\src\\main.jsx": {
+        "classes": {},
+        "functions": {},
+        "imports": [
+            "import { StrictMode } from 'react'",
+            "import { createRoot } from 'react-dom/client'",
+            "import {App} from './App.jsx'"
+        ]
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\src\\components\\logIn.jsx": {
+        "classes": {},
+        "functions": {
+            "LogIn": ""
+        },
+        "imports": [
+            "import React, { useState } from 'react';",
+            "import { useNavigate } from 'react-router-dom';",
+            "import '../Login.css';"
+        ]
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\src\\components\\profile.jsx": {
+        "classes": {},
+        "functions": {},
+        "imports": [
+            "import {React, useEffect, useState }  from \"react\";",
+            "import { useLoaderData, Form } from \"react-router-dom\";",
+            "import axios from 'axios';",
+            "import '../products.css';"
+        ]
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\src\\components\\register.jsx": {
+        "classes": {},
+        "functions": {
+            "Register": ""
+        },
+        "imports": [
+            "import React from \"react\";",
+            "import { Form, useNavigate } from \"react-router-dom\";",
+            "import \"../register.css\";"
+        ]
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\validators\\productValidator.cjs": {
+        "classes": {
+            "ProductValidator": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\application\\validators\\userValidator.cjs": {
+        "classes": {
+            "UserValidator": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\domain\\models\\productModel.cjs": {
+        "classes": {
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\domain\\models\\userModel.cjs": {
+        "classes": {
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\domain\\repositories\\productRepository.cjs": {
+        "classes": {
+            "ProductRepository": {
+                "docstring": "No docstring",
+                "methods": {
+                    "save": "{\n        try {\n            return await insertProduct(arg);\n        } catch (error) {\n            throw new Error(JSON.stringify({status: 500, message: 'Producto no guardado.'}));\n        }\n    }",
+                    "getAllProducts": "{\n        try {\n            console.log(await findAllProducts())\n            return await findAllProducts();\n        } catch (error) {\n            throw new Error(JSON.stringify({status: 400, message: 'Productos no encontrados.'}));\n        }\n    }",
+                    "remove": "{\n        try {\n            return await deleteProduct(id);\n        } catch (error) {\n            throw new Error(JSON.stringify({ status: 500, message: 'Error al eliminar el producto.' }));\n        }\n    }",
+                    "edit": "{\n        try {\n            return await editProduct(id, updatedData);\n        } catch (error) {\n            throw new Error(JSON.stringify({ status: 500, message: 'Error al editar el producto.' }));\n        }\n    }"
+                }
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\domain\\repositories\\userRepository.cjs": {
+        "classes": {
+            "UserRepository": {
+                "docstring": "No docstring",
+                "methods": {
+                    "getOneUserByNameEmailOrOauthId": "{\n        try {\n            return await findOneUserByNameEmailOrOauthId(arg);\n        } catch (error) {\n            throw new Error(JSON.stringify({status: 400, message: 'Usuario no encontrado.'}));\n        }\n    }",
+                    "getOneUserByNameEmail": "{\n        try {\n            return await findOneUserByEmail(email);\n        } catch (error) {\n            throw new Error(JSON.stringify({ status: 400, message: 'Error al buscar el usuario.' }));\n        }\n    }",     
+                    "save": "{\n        try {\n            console.log(\"usuario guardado\")\n            return await insertUser(arg);\n        } catch (error) {\n            throw new Error(JSON.stringify({status: 500, message: 'Usuario no guardado.'}));\n        }\n    }",
+                    "logIn": "{\n        try {\n            return await findOneUserByNameAndPassword(arg);\n        } catch (error) {\n            throw new Error(JSON.stringify({status: 400, message: 'Credenciales erroneas.'}));\n        }\n    }"
+                }
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\infraestructure\\database\\db.cjs": {
+        "classes": {
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\infraestructure\\middlewares\\errorHandling.js": {
+        "classes": {},
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\infraestructure\\middlewares\\rateLimit.js": {
+        "classes": {},
+        "functions": {},
+        "imports": []
+    },
+    "C:/Users/Solvo/AppData/Local/Temp/tmp6lw7y3cc\\pruebaHexagonal-main\\infraestructure\\server\\server.js": {
+        "classes": {
+            "": {
+                "docstring": "No docstring",
+                "methods": {}
+            }
+        },
+        "functions": {},
+        "imports": []
+    }
+}
