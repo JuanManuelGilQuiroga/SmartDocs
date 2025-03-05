@@ -1,7 +1,7 @@
 import json
 import torch
 import os
-from transformers import AutoModelForSeq2SeqLM
+from transformers import AutoModelForCausalLM
 from dataset import get_data_loaders
 
 # Obtener la ruta absoluta del directorio donde está este script
@@ -22,7 +22,7 @@ print(f"Using device: {device}")
 train_loader, test_loader, tokenizer = get_data_loaders(config)
 
 # Cargar modelo
-model = AutoModelForSeq2SeqLM.from_pretrained(config["model_name"]).to(device)
+model = AutoModelForCausalLM.from_pretrained(config["model_name"]).to(device)
 
 # AdamW es un optimizador basado en Adam, pero con decay de pesos (mejor para transformers).
 # model.parameters() pasa los parámetros del modelo al optimizador.

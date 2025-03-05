@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import json
 import os
 
@@ -13,7 +13,7 @@ with open(config_path, "r") as f:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_model():
-    model = AutoModelForSeq2SeqLM.from_pretrained(config["save_model_path"]).to(device)
+    model = AutoModelForCausalLM.from_pretrained(config["save_model_path"]).to(device)
     tokenizer = AutoTokenizer.from_pretrained(config["save_model_path"])
     return model, tokenizer
 
