@@ -19,7 +19,8 @@ if repo is not None:
         
     path = temp_dir.replace(os.sep, "/")
     
-    api_url = os.getenv("API_URL")
+    url = os.getenv("API_URL")
+    api_url = url + "/documentation/"
     payload = {"repo_path": path}
     
     try:
