@@ -146,6 +146,11 @@ def analyze_tree(tree, extension):
                 traverse(child, parent_class if node.type not in ["class_declaration", "class_definition"] else node.child_by_field_name("name").text.decode())
 
         traverse(tree.root_node)
+        
+        # Validar que el archivo contenga clases o funciones antes de retornarlo
+        if not parsed_data["classes"] and not parsed_data["functions"]:
+            return None
+        
         return parsed_data
 
     except Exception as e:
@@ -167,7 +172,11 @@ def ast_analysis(dic):
                 continue
             
             tree = parser.parse(code.encode())
-            results[file] = analyze_tree(tree, extension)
+            parsed_data = analyze_tree(tree, extension)
+
+            if parsed_data:
+                results[file] = parsed_data
+
         return results
     except Exception as e:
         print(f"⚠️  Failed to parse AST: {e}")
