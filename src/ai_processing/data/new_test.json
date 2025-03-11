@@ -1,0 +1,11 @@
+[
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\funcionesnormalizar\\lematizacion.py":{"classes":{},"functions":{"lematizar":"lemas = [lemmatizer.lemmatize(token) for token in tokens]\n    return lemas"},"imports":["from nltk.stem import WordNetLemmatizer","import nltk"]}}
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\funcionesnormalizar\\tokenizacion.py":{"classes":{},"functions":{"tokenizar":"texto_limpio = re.sub(r\"[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\\s]\", \"\", texto) \n    tokens = word_tokenize(texto_limpio)\n    return tokens"},"imports":["from nltk.tokenize import word_tokenize","import nltk","import re"]}}
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\procesamientoPDFs\\texto.py":{"classes":{},"functions":{"texto":"text = extract_text(pdf)\n    return text"},"imports":["from pdfminer.high_level import extract_text"]}}
+    }
+]

@@ -1,0 +1,1262 @@
+[
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\app.py":{"classes":{},"functions":{},"imports":["import streamlit as st","import os","from procesamientoPDFs.texto import texto","from procesamientoPDFs.texto_y_tablas import texto_y_tablas","from procesamientoPDFs.texto_de_img import texto_de_img","from src.normalizar import normalizar","from src.vectorizar import vectorizar, vectorizar_parrafo","import pandas as pd","from src.clasificacion import clasificar","from db.dbQdrant import add_embeddings_to_bd","from chat.chatbot import chatbot","import uuid"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\chat\\chatbot.py":{"classes":{},"functions":{"generar_contexto":"textos = [p.payload[\"description\"] for p in data]\n    contexto = \"\\n\".join(textos)\n    print(contexto)\n    return contexto","chatbot":"pregunta = vectorizar_parrafo(query)\n    data = busqueda_similares(pregunta, collection_name)\n    contexto = generar_contexto(data)\n\n    prompt = f\"Contexto:\\n{contexto}\\n\\nPregunta: {query}\\n\\nRespuesta: \"\n    \n    entrada = tokenizer(prompt, return_tensors=\"pt\").to(device)\n    salida = modelo.generate(**entrada, max_new_tokens=50)\n    respuesta = tokenizer.decode(salida[0], skip_special_tokens=True)\n\n    \n    if \"Respuesta:\" in respuesta:\n        respuesta = respuesta.split(\"Respuesta:\")[-1].strip()\n\n    return respuesta"},"imports":["from transformers import AutoModelForCausalLM, AutoTokenizer","import torch","from db.dbQdrant import busqueda_similares","from src.vectorizar import vectorizar_parrafo"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\db\\dbQdrant.py":{"classes":{},"functions":{"validar_collection":"existing_collections = qdrant.get_collections()\n    if collection_name in [col.name for col in existing_collections.collections]:\n        print(f\"La colección '{collection_name}' ya existe.\")\n    else:\n        print(f\"La colección '{collection_name}' no existe. Creándola...\")\n        qdrant.recreate_collection(\n            collection_name=collection_name,\n            vectors_config={\"size\": len(embeddings[0]), \"distance\": \"Cosine\"}\n        )","add_embeddings_to_bd":"validar_collection(collection_name, embeddings)\n    if metadatos is None:\n        metadatos= [{}] * len(embeddings)\n        \n    qdrant.upsert(\n        collection_name = collection_name,\n        points=[\n            PointStruct(\n                id = i,\n                vector = vector,\n                payload={\"description\": \" \".join(metadatos[i])}            \n                )\n            for i, vector in enumerate(embeddings)\n        ]\n    )\n    \n    vector_store = Qdrant(\n        client=qdrant,\n        collection_name=collection_name,\n        embeddings=embeddings\n    )\n    \n    return (f\"Se insertaron {len(embeddings)} embeddings en '{collection_name}'.\")","obtener_embeddings":"embeddings = []\n    scroll_response = qdrant.scroll(collection_name=collection_name, limit=1000)\n\n    while scroll_response and scroll_response[0]:\n        for point in scroll_response[0]:\n            embeddings.append({\n                \"id\": point.id, \n                \"texto\": point.payload[\"description\"]\n            })\n\n        \n        scroll_token = scroll_response[1]\n        if not scroll_token:\n            break\n\n        \n        scroll_response = qdrant.scroll(collection_name=collection_name, scroll_token=scroll_token)\n\n    return embeddings","busqueda_similares":"respuesta = qdrant.search(\n        collection_name=collection_name,\n        query_vector=query,\n        limit=top\n    )\n    return respuesta"},"imports":["from qdrant_client import QdrantClient","from langchain.vectorstores import Qdrant","from qdrant_client.models import PointStruct"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\funcionesnormalizar\\lematizacion.py":{"classes":{},"functions":{"lematizar":"lemas = [lemmatizer.lemmatize(token) for token in tokens]\n    return lemas"},"imports":["from nltk.stem import WordNetLemmatizer","import nltk"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\funcionesnormalizar\\tokenizacion.py":{"classes":{},"functions":{"tokenizar":"texto_limpio = re.sub(r\"[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\\s]\", \"\", texto) \n    tokens = word_tokenize(texto_limpio)\n    return tokens"},"imports":["from nltk.tokenize import word_tokenize","import nltk","import re"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\procesamientoPDFs\\texto.py":{"classes":{},"functions":{"texto":"text = extract_text(pdf)\n    return text"},"imports":["from pdfminer.high_level import extract_text"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\procesamientoPDFs\\texto_de_img.py":{"classes":{},"functions":{"texto_de_img":"images = convert_from_path(pdf, 300)\n    texto_completo = ''\n    for i, page in enumerate(images):\n        text = pytesseract.image_to_string(page)\n        texto_completo += f\"\\n--- Página {i+1} ---\\n {text}\"\n        return texto_completo"},"imports":["import pytesseract","from pdf2image import convert_from_path","from PIL import Image"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\procesamientoPDFs\\texto_y_tablas.py":{"classes":{},"functions":{"texto_y_tablas":"texto_completo = \"\"\n    tablas = []\n    with pdfplumber.open(pdf) as pdf:\n        for i, page in enumerate(pdf.pages):\n            text = page.extract_text()\n            if text:\n                texto_completo += f\"Página {i + 1} \\n{text}\"\n                        \n            tables= page.extract_tables() or []\n            for j, table in enumerate(tables):\n                formatted_table = [[\"\" if cell is None else cell for cell in row] for row in table]\n                for row in table:\n                    formatted_table.append(row)\n                tablas.append(formatted_table)          \n        return texto_completo, tablas"},"imports":["import pdfplumber"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\src\\clasificacion.py":{"classes":{},"functions":{"clasificar":"n_clusters = 5\n    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)\n    kmeans.fit(vector)\n    labels = kmeans.labels_\n    \n    vector_train, vector_test, labels_train, labels_test, textos_train, textos_test = train_test_split(vector, labels, textos, test_size=0.33, random_state=42)\n    \n    model = GaussianNB()\n    model.fit(vector_train, labels_train)\n    \n    y_pred = model.predict(vector_test)\n    \n    classification_results = []\n    for texto, prediccion in zip(textos_test, y_pred):\n        texto = \" \".join(texto)\n        classification_results.append(f\"Frase: {texto}\\nClase predicha: {prediccion}\\n---\")\n        \n    return accuracy_score(labels_test, y_pred), classification_results"},"imports":["from sklearn.cluster import KMeans","from sklearn.model_selection import train_test_split","from sklearn.naive_bayes import GaussianNB","from sklearn.metrics import accuracy_score","import streamlit as st"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\src\\normalizar.py":{"classes":{},"functions":{"normalizar":"oraciones= sent_tokenize(texto)\n    oraciones_normalizadas =[]\n    for oracion in oraciones:   \n        tokens = tokenizar(oracion)\n        lemas = lematizar(tokens)\n        oraciones_normalizadas.append(lemas)\n    return oraciones_normalizadas"},"imports":["from funcionesnormalizar.tokenizacion import tokenizar","from funcionesnormalizar.lematizacion import lematizar","from nltk.tokenize import sent_tokenize","import nltk"]}},
+        "output": ""
+    },
+    {
+        "input": {"C:\\Users\\Solvo\\AppData\\Local\\Temp\\tmpo08rckf5\\procesamientoPDFs\\src\\vectorizar.py":{"classes":{},"functions":{"vectorizar":"model = Word2Vec(sentences = textos, min_count=1, window=5, workers=4)\n    palabras = list(model.wv.index_to_key)\n    texto_vectorizado = np.array([model.wv[palabra] for palabra in palabras])\n    vector = np.mean([model.wv[palabra] for palabra in palabras], axis=0)\n    return texto_vectorizado, palabras, vector","vectorizar_parrafo":"texto_vectorizado = modelo.encode(textos)\n    return texto_vectorizado"},"imports":["import gensim","from gensim.models import Word2Vec","import numpy as np","from sentence_transformers import SentenceTransformer"]}},
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpd_4hkqie\\EjecucionModelos-4\\proyecto1\\app.py": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "from transformers import pipeline",
+                    "import streamlit as st"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpd_4hkqie\\EjecucionModelos-4\\proyecto2\\multi_model.py": {
+                "classes": {
+                    "MultiModelHandler": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "__init__": "self.translation_model = pipeline(\"translation\", model=\"t5-small\")\n        self.summarization_model = pipeline(\"summarization\", model=\"facebook/bart-large-cnn\")",
+                            "translate_text": "return self.translation_model(text)[0]['translation_text']",
+                            "summarize_text": "return self.summarization_model(text)[0]['summary_text']"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import streamlit as st",
+                    "from transformers import pipeline"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpd_4hkqie\\EjecucionModelos-4\\proyecto3\\object_detection.py": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import torch",
+                    "from PIL import Image",
+                    "from transformers import AutoModelForImageClassification",
+                    "from torchvision import transforms",
+                    "import requests"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\Application.java": {
+                "classes": {
+                    "Application": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "main": "{\n\t\tSpringApplication.run(Application.class, args);\n\t}"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.boot.SpringApplication;",
+                    "import org.springframework.boot.autoconfigure.SpringBootApplication;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\Auth\\AuthController.java": {
+                "classes": {
+                    "AuthController": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "login": "{\n        return ResponseEntity.ok(authService.login(request, response));\n    }",
+                            "register": "{\n        return ResponseEntity.ok(authService.register(request, response));\n    }",
+                            "validateToken": "{\n        Optional<String> token = getTokenFromRequest(request);\n\n        if (token.isPresent() && jwtService.isTokenValid(token.get())) {\n            return ResponseEntity.ok(\"Token v\u00e1lido\");\n        } else {\n            return ResponseEntity.status(401).body(\"Token inv\u00e1lido o expirado\");\n        }\n    }",
+                            "logout": "{\n        authService.logout(response);\n        return ResponseEntity.ok(\"Logout exitoso, cookie eliminada.\");\n    }",
+                            "getTokenFromRequest": "{\n        if (request.getCookies() == null) {\n            return Optional.empty();\n        }\n        return Arrays.stream(request.getCookies())\n                .filter(cookie -> \"jwt\".equals(cookie.getName()))\n                .map(Cookie::getValue)\n                .findFirst();\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import jakarta.servlet.http.Cookie;",
+                    "import jakarta.servlet.http.HttpServletRequest;",
+                    "import jakarta.servlet.http.HttpServletResponse;",
+                    "import org.springframework.http.ResponseEntity;",
+                    "import org.springframework.web.bind.annotation.*;",
+                    "import proyectoSpring.Yoo.Api.jwt.JwtService;",
+                    "import java.util.Arrays;",
+                    "import java.util.Optional;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\Auth\\AuthResponse.java": {
+                "classes": {
+                    "AuthResponse": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getToken": "{\n        return token;\n    }",
+                            "setToken": "{\n        this.token = token;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\Auth\\AuthService.java": {
+                "classes": {
+                    "AuthService": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "login": "{\n        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword()));\n        User user = userRepository.findByNombreUser(request.getUsername()).orElseThrow();\n        String token = jwtService.getToken(user);\n        ResponseCookie jwtCookie = ResponseCookie.from(\"jwt\", token)\n                .httpOnly(true)\n                .secure(true)\n                .path(\"/\")\n                .maxAge(86400)\n                .sameSite(\"Strict\")\n                .build();\n\n        response.addHeader(\"Set-Cookie\", jwtCookie.toString());\n        AuthResponse authResponse = new AuthResponse(token);\n        return authResponse;\n    }",
+                            "register": "{\n        int edad = Period.between(request.getFechaNac(), LocalDate.now()).getYears();\n        if (edad < 14){\n            throw new IllegalArgumentException(\"Usuario menor de 14 a\u00f1os\");\n        }\n        User user = new User(request.getNombre(),request.getNombreUser(),request.getEmail(),passwordEncoder.encode(request.getPassword()),request.getFechaNac(),request.getTelefono());\n        userRepository.save(user);\n        String token = jwtService.getToken(user);\n        ResponseCookie jwtCookie = ResponseCookie.from(\"jwt\", token)\n                .httpOnly(true)\n                .secure(true)\n                .path(\"/\")\n                .maxAge(86400)\n                .sameSite(\"None\")\n                .build();\n        response.addHeader(\"Set-Cookie\", jwtCookie.toString());\n        AuthResponse authResponse = new AuthResponse(token);\n        return authResponse;\n    }",
+                            "logout": "{\n        ResponseCookie cookie = ResponseCookie.from(\"jwt\", \"\")\n                .httpOnly(true)\n                .secure(true)\n                .path(\"/\")\n                .maxAge(0)\n                .sameSite(\"None\")\n                .build();\n\n        response.addHeader(\"Set-Cookie\", cookie.toString());\n    }",
+                            "getAuthenticatedUsername": "{\n        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();\n        if (principal == null) {\n            return null;\n        }\n        if (principal instanceof UserDetails) {\n            return ((UserDetails) principal).getUsername();\n        } else {\n            return principal.toString();\n        }\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import jakarta.servlet.http.Cookie;",
+                    "import jakarta.servlet.http.HttpServletResponse;",
+                    "import org.springframework.http.ResponseCookie;",
+                    "import org.springframework.security.authentication.AuthenticationManager;",
+                    "import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;",
+                    "import org.springframework.security.core.context.SecurityContextHolder;",
+                    "import org.springframework.security.core.userdetails.UserDetails;",
+                    "import org.springframework.security.crypto.password.PasswordEncoder;",
+                    "import org.springframework.stereotype.Service;",
+                    "import proyectoSpring.Yoo.Api.jwt.JwtService;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.repository.UserRepository;",
+                    "import java.time.LocalDate;",
+                    "import java.time.Period;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\Auth\\LoginRequest.java": {
+                "classes": {
+                    "LoginRequest": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getUsername": "{\n        return username;\n    }",
+                            "setUsername": "{\n        this.username = username;\n    }",
+                            "getPassword": "{\n        return password;\n    }",
+                            "setPassword": "{\n        this.password = password;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\Auth\\RegisterRequest.java": {
+                "classes": {
+                    "RegisterRequest": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getNombreUser": "{\n        return nombreUser;\n    }",
+                            "setNombreUser": "{\n        this.nombreUser = username;\n    }",
+                            "getNombre": "{\n        return nombre;\n    }",
+                            "setNombre": "{\n        this.nombre = nombre;\n    }",
+                            "getPassword": "{\n        return password;\n    }",
+                            "setPassword": "{\n        this.password = password;\n    }",
+                            "getEmail": "{\n        return email;\n    }",
+                            "setEmail": "{\n        this.email = email;\n    }",
+                            "getFechaNac": "{\n        return fechaNac;\n    }",
+                            "setFechaNac": "{\n        this.fechaNac = fechaNac;\n    }",
+                            "getTelefono": "{\n        return telefono;\n    }",
+                            "setTelefono": "{\n        this.telefono = telefono;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import java.time.LocalDate;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\config\\ApplicationConfig.java": {
+                "classes": {
+                    "ApplicationConfig": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "authenticationManager": "{\n        return config.getAuthenticationManager();\n    }",
+                            "authenticationProvider": "{\n        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();\n        authenticationProvider.setUserDetailsService(userDetailService());\n        authenticationProvider.setPasswordEncoder(passwordEncoder());\n        return authenticationProvider;\n    }",
+                            "userDetailService": "{\n        return username -> userRepository.findByNombreUser(username).orElseThrow(() -> new UsernameNotFoundException(\"User no encontrado\"));\n    }",
+                            "passwordEncoder": "{\n        return new BCryptPasswordEncoder();\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.context.annotation.Bean;",
+                    "import org.springframework.context.annotation.Configuration;",
+                    "import org.springframework.security.authentication.AuthenticationManager;",
+                    "import org.springframework.security.authentication.AuthenticationProvider;",
+                    "import org.springframework.security.authentication.dao.DaoAuthenticationProvider;",
+                    "import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;",
+                    "import org.springframework.security.core.userdetails.UserDetailsService;",
+                    "import org.springframework.security.core.userdetails.UsernameNotFoundException;",
+                    "import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;",
+                    "import org.springframework.security.crypto.password.PasswordEncoder;",
+                    "import proyectoSpring.Yoo.Api.repository.UserRepository;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\config\\SecurityConfig.java": {
+                "classes": {
+                    "SecurityConfig": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "securityFilterChain": "{\n        return http\n                .cors(cors -> cors.configurationSource(corsConfigurationSource()))\n                .csrf(csrf -> csrf.disable())\n                .authorizeHttpRequests(\n                authRequest ->\n                        authRequest.requestMatchers(\"/auth/**\").permitAll()\n                                .anyRequest().authenticated()\n        )\n                .sessionManagement(sessionManager ->\n                        sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n                .authenticationProvider(authProvider)\n                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)\n                .build();\n    }",
+                            "corsConfigurationSource": "{\n        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();\n        CorsConfiguration config = new CorsConfiguration();\n        config.setAllowedOrigins(List.of(\"URL_PLACEHOLDER_0\"));\n        config.setAllowedMethods(List.of(\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"));\n        config.setAllowedHeaders(List.of(\"Authorization\", \"Content-Type\"));\n        config.setAllowCredentials(true);\n        source.registerCorsConfiguration(\"/**\", config);\n        return source;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.context.annotation.Bean;",
+                    "import org.springframework.context.annotation.Configuration;",
+                    "import org.springframework.security.authentication.AuthenticationProvider;",
+                    "import org.springframework.security.config.annotation.web.builders.HttpSecurity;",
+                    "import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;",
+                    "import org.springframework.security.config.http.SessionCreationPolicy;",
+                    "import org.springframework.security.web.SecurityFilterChain;",
+                    "import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;",
+                    "import org.springframework.web.cors.CorsConfiguration;",
+                    "import org.springframework.web.cors.CorsConfigurationSource;",
+                    "import org.springframework.web.cors.UrlBasedCorsConfigurationSource;",
+                    "import org.springframework.web.filter.CorsFilter;",
+                    "import proyectoSpring.Yoo.Api.jwt.JwtAuthenticationFilter;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\controller\\ComentariosController.java": {
+                "classes": {
+                    "ComentariosController": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "crearComentario": "{\n        Comentario nuevoComentario = comentarioService.crearComentario(comentario, idPubli);\n        return ResponseEntity.ok(nuevoComentario);\n    }",
+                            "obtenerComentarios": "{\n        Publicacion publicacion = new Publicacion();\n        List<Comentario> comentarios = comentarioService.encontrarComentarios(publicacion);\n        return ResponseEntity.ok(comentarios);\n    }",
+                            "actualizarComentario": "{\n\n        Publicacion publicacion = new Publicacion();\n        publicacion.setId(idPubli);\n\n        Comentario comentarioActualizado = comentarioService.actualizarComentario(userid, id, nuevoComentario, publicacion);\n        return ResponseEntity.ok(comentarioActualizado);\n    }",
+                            "eliminarComentario": "{\n        Publicacion publicacion = new Publicacion();\n        publicacion.setId(idPubli);\n\n        comentarioService.eliminarComentario(userid, id, publicacion);\n        return ResponseEntity.ok(\"Comentario eliminado correctamente\");\n    }",
+                            "contarComentarios": "{\n        Publicacion publicacion = new Publicacion();\n        publicacion.setId(idPubli);\n\n        Integer totalComentarios = comentarioService.contarComentariosPubli(publicacion);\n        return ResponseEntity.ok(totalComentarios);\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.http.ResponseEntity;",
+                    "import org.springframework.web.bind.annotation.*;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Comentario;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.service.services.ComentarioService;",
+                    "import proyectoSpring.Yoo.Api.service.services.UserService;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\controller\\LikeController.java": {
+                "classes": {
+                    "LikeController": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "crearMeGusta": "{\n        Integer publicacionId = request.get(\"publicacionId\");\n        Optional<User> usuarioOpt = userRepository.findById(usuarioId);\n        Optional<Publicacion> publiOpt = publicacionRepository.findById(publicacionId);\n        if (!usuarioOpt.isPresent()) {\n            return ResponseEntity.notFound().build();\n        }\n        if (!publiOpt.isPresent()) {\n            return ResponseEntity.notFound().build();\n        }\n\n        User usuario = usuarioOpt.get();\n        Publicacion publicacion = publiOpt.get();\n\n        \n        Optional<Likes> existingLike = likesRepository.findByUserAndPublicacion(usuario, publicacion);\n        if (existingLike.isPresent()) {\n            return ResponseEntity.badRequest().body(\"Ya has dado like a esta publicaci\u00f3n\");\n        }\n\n        Likes likeCrear = new Likes(publicacion, usuario);\n        Likes likeNuevo = likeService.crearLike(likeCrear);\n        return ResponseEntity.ok(likeNuevo);\n    }",
+                            "eliminarLike": "{\n        Optional<User> usuarioOpt = userRepository.findById(usuarioId);\n        Optional<Publicacion> publiOpt = publicacionRepository.findById(publicacionId);\n\n        if (!usuarioOpt.isPresent() || !publiOpt.isPresent()) {\n            return ResponseEntity.notFound().build();\n        }\n\n        User usuario = usuarioOpt.get();\n        Publicacion publicacion = publiOpt.get();\n\n        Optional<Likes> likeOpt = likesRepository.findByUserAndPublicacion(usuario, publicacion);\n        if (!likeOpt.isPresent()) {\n            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(\"El like no existe\");\n        }\n        likeService.eliminarLike(likeOpt.get());\n        return ResponseEntity.ok(\"Like eliminado correctamente\");\n    }",
+                            "contarLikes": "{\n        Publicacion publicacion = new Publicacion();\n        publicacion.setId(idPubli);\n\n        Integer totalLikes = likeService.ListarLikesPubli(publicacion);\n        return ResponseEntity.ok(totalLikes);\n    }",
+                            "getLikeStatus": "{\n\n        User usuario = userRepository.findById(usuarioId)\n                .orElseThrow(() -> new RuntimeException(\"Usuario no encontrado\"));\n\n        Publicacion publicacion = publicacionRepository.findById(publicacionId)\n                .orElseThrow(() -> new RuntimeException(\"Publicaci\u00f3n no encontrada\"));\n\n        return likesRepository.findByUserAndPublicacion(usuario, publicacion).isPresent();\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.http.HttpStatus;",
+                    "import org.springframework.http.ResponseEntity;",
+                    "import org.springframework.web.bind.annotation.*;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Likes;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.repository.LikesRepository;",
+                    "import proyectoSpring.Yoo.Api.repository.PublicacionRepository;",
+                    "import proyectoSpring.Yoo.Api.repository.UserRepository;",
+                    "import proyectoSpring.Yoo.Api.service.services.LikeService;",
+                    "import proyectoSpring.Yoo.Api.service.services.PublicacionService;",
+                    "import java.util.Map;",
+                    "import java.util.Optional;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\controller\\PublicacionController.java": {
+                "classes": {
+                    "PublicacionController": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "obtenerPublicacionesOrdenadasCronologicamente": "{\n        return ResponseEntity.ok(publicacionService.obtenerPublicacionesOrdenadasCronologicamente(ascendente));\n    }",
+                            "obtenerPublicacionesOrdenadasPorRelevancia": "{\n        return ResponseEntity.ok(publicacionService.obtenerPublicacionesOrdenadasPorRelevancia());\n    }",
+                            "crearPublicacion": "{\n        User usuarioActual = obtenerUsuarioAutenticado();\n        if (usuarioActual == null) {\n            return ResponseEntity.status(403).build();\n        }\n        publicacion.setUsuario(usuarioActual);\n        return ResponseEntity.ok(publicacionService.crearPublicacion(publicacion));\n    }",
+                            "obtenerPublicacion": "{\n        return ResponseEntity.ok(publicacionService.obtenerPublicacion(id));\n    }",
+                            "actualizarPublicacion": "{\n        User usuarioActual = obtenerUsuarioAutenticado();\n        Publicacion publiExistente = publicacionService.obtenerPublicacion(id);\n\n        if (publiExistente == null || !publiExistente.getUsuario().equals(usuarioActual)) {\n            return ResponseEntity.status(403).build();\n        }\n\n        return ResponseEntity.ok(publicacionService.actualizarPublicacion(id, publicacion));\n    }",
+                            "eliminarPublicacion": "{\n        User usuarioActual = obtenerUsuarioAutenticado();\n        Publicacion publiExistente = publicacionService.obtenerPublicacion(id);\n\n        if (publiExistente == null || !publiExistente.getUsuario().equals(usuarioActual)) {\n            return ResponseEntity.status(403).build();\n        }\n\n        publicacionService.eliminarPublicacion(id);\n        return ResponseEntity.noContent().build();\n    }",
+                            "obtenerUsuarioAutenticado": "{\n        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();\n        if (principal instanceof UserDetails) {\n            String username = ((UserDetails) principal).getUsername();\n            return userService.obtenerUsuario(username);\n        }\n        return null;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.http.ResponseEntity;",
+                    "import org.springframework.security.core.context.SecurityContextHolder;",
+                    "import org.springframework.security.core.userdetails.UserDetails;",
+                    "import org.springframework.web.bind.annotation.*;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.service.services.PublicacionService;",
+                    "import proyectoSpring.Yoo.Api.service.services.UserService;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\controller\\SeguimientoController.java": {
+                "classes": {
+                    "SeguimientoController": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getUserInfo": "{\n        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();\n        User user = (User) authentication.getPrincipal();\n        return ResponseEntity.ok(user);\n    }",
+                            "obtenerSeguidos": "{\n        return ResponseEntity.ok(seguimientoService.obtenerSeguidos(usuarioId));\n    }",
+                            "obtenerSeguidores": "{\n        return ResponseEntity.ok(seguimientoService.obtenerSeguidores(usuarioId));\n    }",
+                            "contarSeguidos": "{\n        return ResponseEntity.ok(seguimientoService.contarSeguidos(usuarioId));\n    }",
+                            "contarSeguidores": "{\n        return ResponseEntity.ok(seguimientoService.contarSeguidores(usuarioId));\n    }",
+                            "existeSeguimiento": "{\n        return ResponseEntity.ok(seguimientoService.existeSeguimiento(seguidorId, seguidoId));\n    }",
+                            "seguirUsuario": "{\n        seguimientoService.seguirUsuario(seguidorId, seguidoId);\n        return ResponseEntity.ok(\"Usuario seguido correctamente\");\n    }",
+                            "dejarDeSeguirUsuario": "{\n        seguimientoService.dejarDeSeguirUsuario(seguidorId, seguidoId);\n        return ResponseEntity.ok(\"Usuario dejado de seguir correctamente\");\n    }",
+                            "obtenerPublicacionesDeSeguidos": "{\n        return ResponseEntity.ok(seguimientoService.obtenerPublicacionesDeSeguidos(usuarioId));\n    }",
+                            "obtenerUsuariosNoSeguidos": "{\n        return ResponseEntity.ok(seguimientoService.obtenerUsuariosNoSeguidos(usuarioId));\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.http.ResponseEntity;",
+                    "import org.springframework.security.core.Authentication;",
+                    "import org.springframework.security.core.context.SecurityContextHolder;",
+                    "import org.springframework.web.bind.annotation.*;",
+                    "import proyectoSpring.Yoo.Api.model.DTO.SeguimientoDTO;",
+                    "import proyectoSpring.Yoo.Api.model.DTO.UserDTO;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.service.interfaces.ISeguimientoInterface;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\controller\\UserController.java": {
+                "classes": {
+                    "UserController": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getPerfil": "{\n        String username = SecurityContextHolder.getContext().getAuthentication().getName();\n        System.out.println(\"Usuario autenticado: \" + username);\n        if (username == null) {\n            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(\"No autenticado\");\n        }\n        UserDTO user = userService.obtenerUsuarioDTO(username);\n        UserDTO userDTO = new UserDTO(user.getId(), user.getNombre(), user.getNombreUser(), user.getEmail(), user.getBiografia(), user.getFotoPerfil(), user.getFechaNac(),user.getTelefono());\n        return ResponseEntity.ok(userDTO);\n    }",
+                            "actualizarPerfil": "{\n        String authenticatedUsername = SecurityContextHolder.getContext().getAuthentication().getName();\n\n        if (!authenticatedUsername.equals(username)) {\n            System.out.println(authenticatedUsername);\n            System.out.println(username);\n            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(\"No tienes permiso para modificar este perfil.\");\n        }\n\n        User updatedUser = userService.actualizarUser(username, userData);\n\n        UserDTO updatedUserDTO = new UserDTO(updatedUser.getId(), updatedUser.getNombre(), updatedUser.getUsername(),\n                updatedUser.getEmail(), updatedUser.getBiografia(), updatedUser.getFotoPerfil(),\n                updatedUser.getFechaNac(), updatedUser.getTelefono());\n\n        return ResponseEntity.ok(updatedUserDTO);\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.http.HttpStatus;",
+                    "import org.springframework.http.ResponseEntity;",
+                    "import org.springframework.security.core.context.SecurityContextHolder;",
+                    "import org.springframework.web.bind.annotation.*;",
+                    "import proyectoSpring.Yoo.Api.model.DTO.UserDTO;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.service.services.UserService;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\jwt\\JwtAuthenticationFilter.java": {
+                "classes": {
+                    "JwtAuthenticationFilter": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "doFilterInternal": "{\n        String token = getTokenFromRequest(request);\n\n\n        if (token == null) {\n            token = getTokenFromCookies(request);\n        }\n\n        if (token == null) {\n            filterChain.doFilter(request, response);\n            return;\n        }\n\n        \n        String username = jwtService.getUsernameFromToken(token);\n        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null){\n            UserDetails userDetails = userDetailsService.loadUserByUsername(username);\n            if (jwtService.isTokenValid(token, userDetails)){\n                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());\n\n                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));\n\n                SecurityContextHolder.getContext().setAuthentication(authToken);\n            }\n\n        }\n        filterChain.doFilter(request,response);\n    }",
+                            "getTokenFromRequest": "{\n        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);\n        if(StringUtils.hasText(authHeader) && authHeader.startsWith(\"Bearer \")){\n            return authHeader.substring(7);\n        }\n        return null;\n    }",
+                            "getTokenFromCookies": "{\n        if (request.getCookies() != null) {\n            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {\n                if (\"jwt\".equals(cookie.getName())) {\n                    return cookie.getValue();\n                }\n            }\n        }\n        return null;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import jakarta.servlet.FilterChain;",
+                    "import jakarta.servlet.ServletException;",
+                    "import jakarta.servlet.http.HttpServletRequest;",
+                    "import jakarta.servlet.http.HttpServletResponse;",
+                    "import org.springframework.http.HttpHeaders;",
+                    "import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;",
+                    "import org.springframework.security.core.context.SecurityContextHolder;",
+                    "import org.springframework.security.core.userdetails.UserDetails;",
+                    "import org.springframework.security.core.userdetails.UserDetailsService;",
+                    "import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;",
+                    "import org.springframework.stereotype.Component;",
+                    "import org.springframework.util.StringUtils;",
+                    "import org.springframework.web.filter.OncePerRequestFilter;",
+                    "import java.io.IOException;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\jwt\\JwtService.java": {
+                "classes": {
+                    "JwtService": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getToken": "{\n        return Jwts.builder()\n                .setClaims(extraClaims)\n                .setSubject(user.getUsername())\n                .setIssuedAt(new Date(System.currentTimeMillis()))\n                .setExpiration(new Date(System.currentTimeMillis()+1000*60*60*24))\n                .signWith(getKey(), SignatureAlgorithm.HS256)\n                .compact();\n    }",
+                            "getKey": "{\n        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);\n        return Keys.hmacShaKeyFor(keyBytes);\n    }",
+                            "getUsernameFromToken": "{\n        return getClaims(token, Claims::getSubject);\n    }",
+                            "isTokenValid": "{\n        try {\n            String username = getUsernameFromToken(token);\n            return username != null && !hadExpired(token);\n        } catch (Exception e) {\n            return false;\n        }\n    }",
+                            "getAllClaims": "{\n        return Jwts\n                .parserBuilder()\n                .setSigningKey(getKey())\n                .build()\n                .parseClaimsJws(token)\n                .getBody();\n    }",
+                            "getClaims": "{\n        final Claims claims = getAllClaims(token);\n        return claimsResolver.apply(claims);\n    }",
+                            "fechaExp": "{\n        return getClaims(token, Claims::getExpiration);\n    }",
+                            "hadExpired": "{\n        return fechaExp(token).before(new Date());\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import io.jsonwebtoken.Claims;",
+                    "import io.jsonwebtoken.Jwts;",
+                    "import io.jsonwebtoken.SignatureAlgorithm;",
+                    "import io.jsonwebtoken.io.Decoders;",
+                    "import io.jsonwebtoken.security.Keys;",
+                    "import org.springframework.security.core.userdetails.UserDetails;",
+                    "import org.springframework.stereotype.Service;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import java.security.Key;",
+                    "import java.util.Date;",
+                    "import java.util.HashMap;",
+                    "import java.util.Map;",
+                    "import java.util.function.Function;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\DTO\\PublicacionDTO.java": {
+                "classes": {
+                    "PublicacionDTO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "getContenido": "{\n        return contenido;\n    }",
+                            "setContenido": "{\n        this.contenido = contenido;\n    }",
+                            "getFecha": "{\n        return fecha;\n    }",
+                            "setFecha": "{\n        this.fecha = fecha;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import java.sql.Timestamp;",
+                    "import java.time.LocalDate;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\DTO\\SeguimientoDTO.java": {
+                "classes": {
+                    "SeguimientoDTO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "getSeguido": "{\n        return seguido;\n    }",
+                            "setSeguido": "{\n        this.seguido = seguido;\n    }",
+                            "getSeguidor": "{\n        return seguidor;\n    }",
+                            "setSeguidor": "{\n        this.seguidor = seguidor;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": []
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\DTO\\UserDTO.java": {
+                "classes": {
+                    "UserDTO": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "getNombre": "{\n        return nombre;\n    }",
+                            "setNombre": "{\n        this.nombre = nombre;\n    }",
+                            "getNombreUser": "{\n        return nombreUser;\n    }",
+                            "setNombreUser": "{\n        this.nombreUser = nombreUser;\n    }",
+                            "getEmail": "{\n        return email;\n    }",
+                            "setEmail": "{\n        this.email = email;\n    }",
+                            "getBiografia": "{\n        return biografia;\n    }",
+                            "setBiografia": "{\n        this.biografia = biografia;\n    }",
+                            "getFotoPerfil": "{\n        return fotoPerfil;\n    }",
+                            "setFotoPerfil": "{\n        this.fotoPerfil = fotoPerfil;\n    }",
+                            "getFechaNac": "{\n        return fechaNac;\n    }",
+                            "setFechaNac": "{\n        this.fechaNac = fechaNac;\n    }",
+                            "getTelefono": "{\n        return telefono;\n    }",
+                            "setTelefono": "{\n        this.telefono = telefono;\n    }",
+                            "getPublicaciones": "{\n        return publicaciones;\n    }",
+                            "setPublicaciones": "{\n        this.publicaciones = publicaciones;\n    }",
+                            "toString": "{\n        return \"UserDTO{\" +\n                \"id=\" + id +\n                \", nombre='\" + nombre + '\\'' +\n                \", nombreUser='\" + nombreUser + '\\'' +\n                \", email='\" + email + '\\'' +\n                \", biografia='\" + biografia + '\\'' +\n                \", fotoPerfil='\" + fotoPerfil + '\\'' +\n                \", fechaNac=\" + fechaNac +\n                \", telefono='\" + telefono + '\\'' +\n                \", publicaciones=\" + publicaciones +\n                '}';\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import java.time.LocalDate;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\entities\\Comentario.java": {
+                "classes": {
+                    "Comentario": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "getPublicacion": "{\n        return publicacion;\n    }",
+                            "setPublicacion": "{\n        this.publicacion = publicacion;\n    }",
+                            "getUser": "{\n        return user;\n    }",
+                            "setUser": "{\n        this.user = user;\n    }",
+                            "getUsuariosMencionados": "{\n        return usuariosMencionados;\n    }",
+                            "setUsuariosMencionados": "{\n        this.usuariosMencionados = usuariosMencionados;\n    }",
+                            "getFecha": "{\n        return fecha;\n    }",
+                            "setFecha": "{\n        this.fecha = fecha;\n    }",
+                            "getTexto": "{\n        return texto;\n    }",
+                            "setTexto": "{\n        this.texto = texto;\n    }",
+                            "toString": "{\n        return \"Comentario{\" +\n                \"id=\" + id +\n                \", publicacion=\" + publicacion +\n                \", user=\" + user +\n                \", usuariosMencionados=\" + usuariosMencionados +\n                \", fecha=\" + fecha +\n                \", texto='\" + texto + '\\'' +\n                '}';\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import jakarta.persistence.*;",
+                    "import org.hibernate.annotations.CreationTimestamp;",
+                    "import org.hibernate.annotations.OnDelete;",
+                    "import org.hibernate.annotations.OnDeleteAction;",
+                    "import java.sql.Timestamp;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\entities\\Etiqueta.java": {
+                "classes": {
+                    "Etiqueta": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "getTexto": "{\n        return texto;\n    }",
+                            "setTexto": "{\n        this.texto = texto;\n    }",
+                            "getPublicaciones": "{\n        return publicaciones;\n    }",
+                            "setPublicaciones": "{\n        this.publicaciones = publicaciones;\n    }",
+                            "toString": "{\n        return \"Etiqueta{\" +\n                \"id=\" + id +\n                \", texto='\" + texto + '\\'' +\n                \", publicaciones=\" + publicaciones +\n                '}';\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import com.fasterxml.jackson.annotation.JsonIgnore;",
+                    "import jakarta.persistence.*;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\entities\\Likes.java": {
+                "classes": {
+                    "Likes": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getFechaInteraccion": "{\n        return fechaInteraccion;\n    }",
+                            "setFechaInteraccion": "{\n        this.fechaInteraccion = fechaInteraccion;\n    }",
+                            "getUser": "{\n        return user;\n    }",
+                            "setUser": "{\n        this.user = user;\n    }",
+                            "getPublicacion": "{\n        return publicacion;\n    }",
+                            "setPublicacion": "{\n        this.publicacion = publicacion;\n    }",
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "toString": "{\n        return \"Likes{\" +\n                \"id=\" + id +\n                \", publicacion=\" + publicacion +\n                \", user=\" + user +\n                \", fechaInteraccion=\" + fechaInteraccion +\n                '}';\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import com.fasterxml.jackson.annotation.JsonIgnore;",
+                    "import jakarta.persistence.*;",
+                    "import org.hibernate.annotations.CreationTimestamp;",
+                    "import org.hibernate.annotations.OnDelete;",
+                    "import org.hibernate.annotations.OnDeleteAction;",
+                    "import java.sql.Timestamp;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\entities\\Notificacion.java": {
+                "classes": {
+                    "Notificacion": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "getUser": "{\n        return user;\n    }",
+                            "setUser": "{\n        this.user = user;\n    }",
+                            "getTipo": "{\n        return tipo;\n    }",
+                            "setTipo": "{\n        this.tipo = tipo;\n    }",
+                            "getIdReferencia": "{\n        return idReferencia;\n    }",
+                            "setIdReferencia": "{\n        this.idReferencia = idReferencia;\n    }",
+                            "getFecha": "{\n        return fecha;\n    }",
+                            "setFecha": "{\n        this.fecha = fecha;\n    }",
+                            "getLeido": "{\n        return leido;\n    }",
+                            "setLeido": "{\n        this.leido = leido;\n    }",
+                            "toString": "{\n        return \"Notificacion{\" +\n                \"id=\" + id +\n                \", user=\" + user +\n                \", tipo=\" + tipo +\n                \", idReferencia=\" + idReferencia +\n                \", fecha=\" + fecha +\n                \", leido=\" + leido +\n                '}';\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import jakarta.persistence.*;",
+                    "import org.hibernate.annotations.CreationTimestamp;",
+                    "import org.hibernate.annotations.OnDelete;",
+                    "import org.hibernate.annotations.OnDeleteAction;",
+                    "import java.sql.Timestamp;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\entities\\Publicacion.java": {
+                "classes": {
+                    "Publicacion": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getLikes": "{\n        return likes;\n    }",
+                            "setLikes": "{\n        this.likes = likes;\n    }",
+                            "getEtiquetas": "{\n        return etiquetas;\n    }",
+                            "setEtiquetas": "{\n        this.etiquetas = etiquetas;\n    }",
+                            "getMenciones": "{\n        return menciones;\n    }",
+                            "setMenciones": "{\n        this.menciones = menciones;\n    }",
+                            "getFechaCreacion": "{\n        return fechaCreacion;\n    }",
+                            "setFechaCreacion": "{\n        this.fechaCreacion = fechaCreacion;\n    }",
+                            "getUsuario": "{\n        return usuario;\n    }",
+                            "setUsuario": "{\n        this.usuario = usuario;\n    }",
+                            "getImagen": "{\n        return imagen;\n    }",
+                            "setImagen": "{\n        this.imagen = imagen;\n    }",
+                            "getTexto": "{\n        return texto;\n    }",
+                            "setTexto": "{\n        this.texto = texto;\n    }",
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "toString": "{\n        return \"Publicacion{\" +\n                \"id=\" + id +\n                \", texto='\" + texto + '\\'' +\n                \", imagen='\" + imagen + '\\'' +\n                \", usuario=\" + usuario +\n                \", fechaCreacion=\" + fechaCreacion +\n                \", menciones=\" + menciones +\n                \", etiquetas=\" + etiquetas +\n                '}';\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import com.fasterxml.jackson.annotation.JsonIdentityInfo;",
+                    "import com.fasterxml.jackson.annotation.ObjectIdGenerators;",
+                    "import jakarta.persistence.*;",
+                    "import org.hibernate.annotations.CreationTimestamp;",
+                    "import org.hibernate.annotations.OnDelete;",
+                    "import org.hibernate.annotations.OnDeleteAction;",
+                    "import java.sql.Timestamp;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\entities\\Seguimiento.java": {
+                "classes": {
+                    "Seguimiento": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "getIdUserSeguido": "{\n        return idUserSeguido;\n    }",
+                            "setIdUserSeguido": "{\n        this.idUserSeguido = idUserSeguido;\n    }",
+                            "getIdUser": "{\n        return idUser;\n    }",
+                            "setIdUser": "{\n        this.idUser = idUser;\n    }",
+                            "getFechaSeguimiento": "{\n        return fechaSeguimiento;\n    }",
+                            "setFechaSeguimiento": "{\n        this.fechaSeguimiento = fechaSeguimiento;\n    }",
+                            "toString": "{\n        return \"Seguimiento{\" +\n                \"id=\" + id +\n                \", idUserSeguido=\" + idUserSeguido +\n                \", idUser=\" + idUser +\n                \", fechaSeguimiento=\" + fechaSeguimiento +\n                '}';\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import jakarta.persistence.*;",
+                    "import org.hibernate.annotations.CreationTimestamp;",
+                    "import org.hibernate.annotations.OnDelete;",
+                    "import org.hibernate.annotations.OnDeleteAction;",
+                    "import java.sql.Timestamp;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\model\\entities\\User.java": {
+                "classes": {
+                    "User": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "getId": "{\n        return id;\n    }",
+                            "setId": "{\n        this.id = id;\n    }",
+                            "getNombre": "{\n        return nombre;\n    }",
+                            "setNombre": "{\n        this.nombre = nombre;\n    }",
+                            "setNombreUser": "{\n        this.nombreUser = nombreUser;\n    }",
+                            "getEmail": "{\n        return email;\n    }",
+                            "setEmail": "{\n        this.email = email;\n    }",
+                            "getAuthorities": "{\n        return Collections.emptyList();\n    }",
+                            "getPassword": "{\n        return this.password;\n    }",
+                            "getUsername": "{\n        return this.nombreUser;\n    }",
+                            "isAccountNonExpired": "{\n        return true;\n    }",
+                            "isAccountNonLocked": "{\n        return true;\n    }",
+                            "isCredentialsNonExpired": "{\n        return true;\n    }",
+                            "isEnabled": "{\n        return true;\n    }",
+                            "setPassword": "{\n        this.password = password;\n    }",
+                            "getBiografia": "{\n        return biografia;\n    }",
+                            "setBiografia": "{\n        this.biografia = biografia;\n    }",
+                            "getFotoPerfil": "{\n        return fotoPerfil;\n    }",
+                            "setFotoPerfil": "{\n        this.fotoPerfil = fotoPerfil;\n    }",
+                            "getFechaNac": "{\n        return fechaNac;\n    }",
+                            "setFechaNac": "{\n        this.fechaNac = fechaNac;\n    }",
+                            "getTelefono": "{\n        return telefono;\n    }",
+                            "setTelefono": "{\n        this.telefono = telefono;\n    }",
+                            "getPublicaciones": "{\n        return publicaciones;\n    }",
+                            "setPublicaciones": "{\n        this.publicaciones = publicaciones;\n    }",
+                            "toString": "{\n        return \"User{\" +\n                \"id=\" + id +\n                \", nombre='\" + nombre + '\\'' +\n                \", nombreUser='\" + nombreUser + '\\'' +\n                \", email='\" + email + '\\'' +\n                \", password='\" + password + '\\'' +\n                \", biografia='\" + biografia + '\\'' +\n                \", fotoPerfil='\" + fotoPerfil + '\\'' +\n                \", fechaNac=\" + fechaNac +\n                \", telefono='\" + telefono + '\\'' +\n                \", publicaciones=\" + publicaciones +\n                '}';\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import com.fasterxml.jackson.annotation.JsonIdentityInfo;",
+                    "import com.fasterxml.jackson.annotation.JsonProperty;",
+                    "import com.fasterxml.jackson.annotation.ObjectIdGenerators;",
+                    "import jakarta.persistence.*;",
+                    "import org.springframework.security.core.GrantedAuthority;",
+                    "import org.springframework.security.core.userdetails.UserDetails;",
+                    "import java.time.LocalDate;",
+                    "import java.util.Collection;",
+                    "import java.util.Collections;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\repository\\ComentarioRepository.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import org.springframework.data.jpa.repository.JpaRepository;",
+                    "import org.springframework.stereotype.Repository;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Comentario;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\repository\\EtiquetaRepository.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import org.springframework.data.jpa.repository.JpaRepository;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Etiqueta;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\repository\\LikesRepository.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import org.springframework.data.jpa.repository.JpaRepository;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Likes;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import java.util.Optional;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\repository\\NotificacionRepository.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import org.springframework.data.jpa.repository.JpaRepository;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Notificacion;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\repository\\PublicacionRepository.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import org.springframework.data.jpa.repository.JpaRepository;",
+                    "import org.springframework.stereotype.Repository;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Etiqueta;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\repository\\SeguimientoRepository.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import jakarta.transaction.Transactional;",
+                    "import org.springframework.data.jpa.repository.JpaRepository;",
+                    "import org.springframework.data.jpa.repository.Modifying;",
+                    "import org.springframework.data.jpa.repository.Query;",
+                    "import org.springframework.data.repository.query.Param;",
+                    "import org.springframework.stereotype.Repository;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Seguimiento;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\repository\\UserRepository.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import org.springframework.data.jpa.repository.JpaRepository;",
+                    "import org.springframework.stereotype.Repository;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import java.util.Optional;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\interfaces\\IComentarioInterface.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import proyectoSpring.Yoo.Api.model.entities.Comentario;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\interfaces\\ILikesInterface.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import proyectoSpring.Yoo.Api.model.entities.Likes;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\interfaces\\IPublicacionInterface.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import proyectoSpring.Yoo.Api.model.entities.Etiqueta;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\interfaces\\ISeguimientoInterface.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import proyectoSpring.Yoo.Api.model.DTO.SeguimientoDTO;",
+                    "import proyectoSpring.Yoo.Api.model.DTO.UserDTO;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import java.util.List;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\interfaces\\IUserService.java": {
+                "classes": {},
+                "functions": {},
+                "imports": [
+                    "import proyectoSpring.Yoo.Api.model.DTO.UserDTO;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\services\\ComentarioService.java": {
+                "classes": {
+                    "ComentarioService": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "crearComentario": "{\n        Publicacion publi = publicacionRepository.findById(idPubli).orElseThrow(() -> new RuntimeException(\"Publicaci\u00f3n no encontrada\"));\n        comentario.setPublicacion(publi);\n        List<User> usuariosMencionados = getUsuariosMencionados(comentario.getTexto());\n        comentario.getUsuariosMencionados().addAll(usuariosMencionados);\n        return comentarioRepository.save(comentario);\n    }",
+                            "encontrarComentarios": "{\n        return comentarioRepository.findByPublicacion(publicacion);\n    }",
+                            "encontrarComentario": "{\n        return comentarioRepository.findById(id)\n                .filter(comentario -> comentario.getPublicacion().equals(publicacion))\n                .orElseThrow(() -> new RuntimeException(\"Comentario no encontrado en la publicaci\u00f3n dada\"));\n    }",
+                            "actualizarComentario": "{\n        Comentario comentarioExistente = encontrarComentario(id, publicacion);\n        if (Objects.equals(comentarioExistente.getUser().getId(), userid)){\n            comentarioExistente.setTexto(nuevoComentario.getTexto());\n            return comentarioRepository.save(comentarioExistente);\n        } return null;\n    }",
+                            "eliminarComentario": "{\n        Comentario comentarioExistente = encontrarComentario(id, publicacion);\n        if (Objects.equals(comentarioExistente.getUser().getId(), userid)){\n            comentarioRepository.deleteById(comentarioExistente.getId());\n        }\n    }",
+                            "contarComentariosPubli": "{\n        return comentarioRepository.countByPublicacion(publicacion);\n    }",
+                            "getUsuariosMencionados": "{\n        List<User> usuariosMencionados = new ArrayList<>();\n        Pattern pattern = Pattern.compile(\"@(\\\\w+)\");\n        Matcher matcher = pattern.matcher(texto);\n\n        while (matcher.find()) {\n            String username = matcher.group(1);\n            User usuario = userRepository.findByNombreUser(username).orElseThrow(null);\n            if (usuario != null) {\n                usuariosMencionados.add(usuario);\n            }\n        }\n\n        return usuariosMencionados;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.stereotype.Service;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Comentario;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.repository.ComentarioRepository;",
+                    "import proyectoSpring.Yoo.Api.repository.PublicacionRepository;",
+                    "import proyectoSpring.Yoo.Api.repository.UserRepository;",
+                    "import proyectoSpring.Yoo.Api.service.interfaces.IComentarioInterface;",
+                    "import java.util.ArrayList;",
+                    "import java.util.List;",
+                    "import java.util.Objects;",
+                    "import java.util.regex.Matcher;",
+                    "import java.util.regex.Pattern;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\services\\LikeService.java": {
+                "classes": {
+                    "LikeService": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "crearLike": "{\n        Optional<User> usuarioExistente = userRepository.findById(like.getUser().getId());\n        if (usuarioExistente.isPresent()) {\n            Likes nuevoLike = new Likes();\n            nuevoLike.setUser(usuarioExistente.get());\n            nuevoLike.setPublicacion(like.getPublicacion());\n            likesRepository.save(nuevoLike);\n            return nuevoLike;\n        } else {\n            throw new IllegalArgumentException(\"El usuario no existe\");\n        }\n    }",
+                            "eliminarLike": "{\n        likesRepository.delete(like);\n    }",
+                            "ListarLikesPubli": "{\n        return likesRepository.countByPublicacion(publicacion);\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.springframework.stereotype.Service;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Likes;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.repository.LikesRepository;",
+                    "import proyectoSpring.Yoo.Api.repository.PublicacionRepository;",
+                    "import proyectoSpring.Yoo.Api.repository.UserRepository;",
+                    "import proyectoSpring.Yoo.Api.service.interfaces.ILikesInterface;",
+                    "import java.util.Optional;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\services\\PublicacionService.java": {
+                "classes": {
+                    "PublicacionService": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "obtenerPublicacion": "{\n        return publicacionRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(\"Publicaci\u00f3n no encontrada con ID: \" + id));\n    }",
+                            "crearPublicacion": "{\n        if (publicacion.getMenciones() == null) {\n            publicacion.setMenciones(new ArrayList<>());\n        }\n        Publicacion nuevaPublicacion = publicacionRepository.save(publicacion);\n        List<User> usuariosMencionados = getUsuariosMencionados(publicacion.getTexto());\n        nuevaPublicacion.getMenciones().addAll(usuariosMencionados);\n        return publicacionRepository.save(nuevaPublicacion);\n    }",
+                            "actualizarPublicacion": "{\n        Publicacion publiExistente = obtenerPublicacion(id);\n        publiExistente.setTexto(publicacion.getTexto());\n        publiExistente.setImagen(publicacion.getImagen());\n        publiExistente.setMenciones(publicacion.getMenciones());\n        publiExistente.setEtiquetas(publicacion.getEtiquetas());\n        return publicacionRepository.save(publiExistente);\n    }",
+                            "eliminarPublicacion": "{\n        Publicacion publiExistente = obtenerPublicacion(id);\n        publicacionRepository.delete(publiExistente);\n    }",
+                            "obtenerPublicacionesPorUser": "{\n        return publicacionRepository.findByUsuario(user);\n    }",
+                            "obtenerPublicacionesPorEtiqueta": "{\n        return publicacionRepository.findByEtiquetas(etiqueta);\n    }",
+                            "obtenerPublicacionesOrdenadasCronologicamente": "{\n        if (ascendente) {\n            return publicacionRepository.findAllByOrderByFechaCreacionAsc();\n        } else {\n            return publicacionRepository.findAllByOrderByFechaCreacionDesc();\n        }\n    }",
+                            "obtenerPublicacionesOrdenadasPorRelevancia": "{\n        return publicacionRepository.findAllByOrderByLikesDesc();\n    }",
+                            "getUsuariosMencionados": "{\n        List<User> usuariosMencionados = new ArrayList<>();\n        Pattern pattern = Pattern.compile(\"@(\\\\w+)\");\n        Matcher matcher = pattern.matcher(texto);\n\n        while (matcher.find()) {\n            String username = matcher.group(1);\n            User usuario = userRepository.findByNombreUser(username).orElseThrow(null);\n            if (usuario != null) {\n                usuariosMencionados.add(usuario);\n            }\n        }\n\n        return usuariosMencionados;\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import jakarta.persistence.EntityNotFoundException;",
+                    "import org.springframework.stereotype.Service;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Etiqueta;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.repository.PublicacionRepository;",
+                    "import proyectoSpring.Yoo.Api.repository.UserRepository;",
+                    "import proyectoSpring.Yoo.Api.service.interfaces.IPublicacionInterface;",
+                    "import java.util.ArrayList;",
+                    "import java.util.List;",
+                    "import java.util.regex.Matcher;",
+                    "import java.util.regex.Pattern;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\services\\SeguimientoService.java": {
+                "classes": {
+                    "SeguimientoService": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "convertToUserDTO": "{\n        return new UserDTO(user.getId(), user.getNombre(), user.getUsername(), user.getEmail(), user.getBiografia(), user.getFotoPerfil(), user.getFechaNac(), user.getTelefono());\n    }",
+                            "convertToSeguimientoDTO": "{\n        UserDTO seguidoDTO = convertToUserDTO(seguimiento.getIdUserSeguido());\n        UserDTO seguidorDTO = convertToUserDTO(seguimiento.getIdUser());\n        return new SeguimientoDTO(seguimiento.getId(), seguidoDTO, seguidorDTO);\n    }",
+                            "convertToPublicacionDTO": "{\n        return new PublicacionDTO(publicacion.getId(), publicacion.getTexto(), publicacion.getFechaCreacion(), publicacion.getImagen());\n    }",
+                            "obtenerSeguidos": "{\n        User user = userRepository.findById(usuarioId).orElseThrow(() -> new RuntimeException(\"Usuario no encontrado\"));\n        List<Seguimiento> seguimientos = seguimientoRepository.findByIdUser(user);\n        return seguimientos.stream()\n                .map(this::convertToSeguimientoDTO)\n                .collect(Collectors.toList());\n    }",
+                            "obtenerSeguidores": "{\n        User user = userRepository.findById(usuarioId).orElseThrow(() -> new RuntimeException(\"Usuario no encontrado\"));\n        List<Seguimiento> seguimientos = seguimientoRepository.findByIdUserSeguido(user);\n        return seguimientos.stream()\n                .map(this::convertToSeguimientoDTO)\n                .collect(Collectors.toList());\n    }",
+                            "contarSeguidos": "{\n        User user = userRepository.findById(usuarioId).orElseThrow(() -> new RuntimeException(\"Usuario no encontrado\"));\n        return seguimientoRepository.countByIdUser(user);\n    }",
+                            "contarSeguidores": "{\n        User user = userRepository.findById(usuarioId).orElseThrow(() -> new RuntimeException(\"Usuario no encontrado\"));\n        return seguimientoRepository.countByIdUserSeguido(user);\n    }",
+                            "existeSeguimiento": "{\n        User seguidor = userRepository.findById(seguidorId).orElseThrow(() -> new RuntimeException(\"Usuario no encontrado\"));\n        User seguido = userRepository.findById(seguidoId).orElseThrow(() -> new RuntimeException(\"Usuario no encontrado\"));\n        return seguimientoRepository.existsByIdUserAndIdUserSeguido(seguidor, seguido);\n    }",
+                            "seguirUsuario": "{\n        if (!existeSeguimiento(seguidorId, seguidoId)) {\n            User seguidor = userRepository.findById(seguidorId).orElseThrow(() -> new RuntimeException(\"Usuario no encontrado\"));\n            User seguido = userRepository.findById(seguidoId).orElseThrow(() -> new RuntimeException(\"Usuario no encontrado\"));\n            Seguimiento newSeguimiento = new Seguimiento(seguido, seguidor);\n            seguimientoRepository.save(newSeguimiento);\n        }\n    }",
+                            "dejarDeSeguirUsuario": "{\n        seguimientoRepository.deleteByUserIds(seguidorId, seguidoId);\n    }",
+                            "obtenerPublicacionesDeSeguidos": "{\n        List<Publicacion> publicaciones = seguimientoRepository.findPublicacionesByUsuarioSeguidos(usuarioId);\n        return publicaciones;\n    }",
+                            "obtenerUsuariosNoSeguidos": "{\n        List<User> users = seguimientoRepository.findUsuariosNoSeguidos(usuarioId);\n        return users.stream()\n                .map(user -> convertToUserDTO(user))\n                .collect(Collectors.toList());\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import jakarta.transaction.Transactional;",
+                    "import org.springframework.stereotype.Service;",
+                    "import proyectoSpring.Yoo.Api.model.DTO.PublicacionDTO;",
+                    "import proyectoSpring.Yoo.Api.model.DTO.SeguimientoDTO;",
+                    "import proyectoSpring.Yoo.Api.model.DTO.UserDTO;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Publicacion;",
+                    "import proyectoSpring.Yoo.Api.model.entities.Seguimiento;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.repository.SeguimientoRepository;",
+                    "import proyectoSpring.Yoo.Api.repository.UserRepository;",
+                    "import proyectoSpring.Yoo.Api.service.interfaces.ISeguimientoInterface;",
+                    "import java.util.List;",
+                    "import java.util.stream.Collectors;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\main\\java\\proyectoSpring\\Yoo\\Api\\service\\services\\UserService.java": {
+                "classes": {
+                    "UserService": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "convertToUserDTO": "{\n        return new UserDTO(user.getId(), user.getNombre(), user.getUsername(), user.getEmail(), user.getBiografia(), user.getFotoPerfil(), user.getFechaNac(), user.getTelefono());\n    }",
+                            "obtenerUsuario": "{\n        User user = userRepository.findByNombreUser(username).orElseThrow(null);\n        return user;\n    }",
+                            "obtenerUsuarioDTO": "{\n        User user = userRepository.findByNombreUser(username).orElseThrow(null);\n        UserDTO userDTO = convertToUserDTO(user);\n        return userDTO;\n    }",
+                            "actualizarUser": "{\n        User userExistente = userRepository.findByNombreUser(username).orElseThrow(null);\n        if (userExistente == null) {\n            throw new EntityNotFoundException(\"User no encontrado\");\n        }\n        if (datosActualizados == null) {\n            throw new IllegalArgumentException(\"La info proporcionada no puede ser nula\");\n        }\n\n        if (datosActualizados.getNombre() != null && !datosActualizados.getNombre().equals(userExistente.getNombre())) {\n            userExistente.setNombre(datosActualizados.getNombre());\n        }\n        if (datosActualizados.getTelefono() != null && !datosActualizados.getTelefono().equals(userExistente.getTelefono())) {\n            userExistente.setTelefono(datosActualizados.getTelefono());\n        }\n        if (datosActualizados.getBiografia() != null && !datosActualizados.getBiografia().equals(userExistente.getBiografia())) {\n            userExistente.setBiografia(datosActualizados.getBiografia());\n        }\n        if (datosActualizados.getFotoPerfil() != null && !datosActualizados.getFotoPerfil().equals(userExistente.getFotoPerfil())) {\n            userExistente.setFotoPerfil(datosActualizados.getFotoPerfil());\n        }\n        return userRepository.save(userExistente);\n    }"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import jakarta.persistence.EntityNotFoundException;",
+                    "import org.springframework.stereotype.Service;",
+                    "import proyectoSpring.Yoo.Api.model.DTO.UserDTO;",
+                    "import proyectoSpring.Yoo.Api.model.entities.User;",
+                    "import proyectoSpring.Yoo.Api.repository.UserRepository;",
+                    "import proyectoSpring.Yoo.Api.service.interfaces.IUserService;"
+                ]
+            }
+        },
+        "output": ""
+    },
+    {
+        "input": {
+            "C:/Users/Solvo/AppData/Local/Temp/tmpai_5ss6l\\Yoo-Api-main\\src\\test\\java\\proyectoSpring\\Yoo\\Api\\ApplicationTests.java": {
+                "classes": {
+                    "ApplicationTests": {
+                        "docstring": "No docstring",
+                        "methods": {
+                            "contextLoads": "{\n\t}"
+                        }
+                    }
+                },
+                "functions": {},
+                "imports": [
+                    "import org.junit.jupiter.api.Test;",
+                    "import org.springframework.boot.test.context.SpringBootTest;"
+                ]
+            }
+        },
+        "output": ""
+    }
+]
