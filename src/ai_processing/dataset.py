@@ -1,3 +1,4 @@
+# ESTE ARCHIVO SE USA PARA CREAR EL DATASET PARA PRACTICAR FINE-TUNING PERO EN ESTA PRIMER VERSION NO SE NECESITA
 import json
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -10,7 +11,7 @@ class CodeDocumentationDataset(Dataset):
     # - tokenizer: Tokenizador del modelo para procesar los textos.
     # - max_tokens: Número máximo de tokens permitidos en cada muestra (input + output).
     # - input_ratio: Proporción de tokens asignados al código (el resto será para la documentación).
-    def __init__(self, file_path, tokenizer, max_tokens=512, input_ratio=0.7):
+    def __init__(self, file_path, tokenizer, max_tokens=2048, input_ratio=0.7):
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"❌ Error: No se encontró el archivo {file_path}")
 
@@ -44,8 +45,8 @@ class CodeDocumentationDataset(Dataset):
         for file_path, file_content in item["input"].items():
             all_imports.extend(file_content.get("imports", []))
             all_functions.extend(file_content["functions"].values())
-            all_classes.extend(file_content["functions"].values())
-
+            all_classes.extend(file_content["classes"].values())
+        
         imports = "\n".join(all_imports)
         functions = "\n".join(all_functions)
         classes = "\n".join(all_classes)
@@ -55,25 +56,30 @@ class CodeDocumentationDataset(Dataset):
             f"<CLASSES>\n{classes}"
         )
 
+        print(source)
+
         target = item["output"]
 
         tokenized_input = self.tokenizer(source, max_length=self.max_code_tokens, truncation=True, padding="max_length", return_tensors="pt")
         tokenized_target = self.tokenizer(target, max_length=self.max_doc_tokens, truncation=True, padding="max_length", return_tensors="pt")
 
+        labels = tokenized_input["input_ids"].clone()
+        labels[:, :-1] = tokenized_input["input_ids"][:, 1:]
+        labels[:, -1] = -100
         # Este return es fundamental para entrenar el modelo porque le proporciona: ✔ Entrada (input_ids): Código tokenizado.
         # ✔ Máscara (attention_mask): Indica tokens válidos.
         # ✔ Salida esperada (labels): Documentación tokenizada.
         return {
             "input_ids": tokenized_input["input_ids"].squeeze(),
             "attention_mask": tokenized_input["attention_mask"].squeeze(),
-            "labels": tokenized_target["input_ids"].squeeze()
+            "labels": labels.squeeze()
         }
 
 # Esta funcion es la que se invoca pra poder usar la clase, se importa el modelo, se crea el tokenizer y se crea la instancia de la clase para tokenizar tanto el train data como el test data
 # Se crea un dataloader para poder entrenar el modelo
 def get_data_loaders(config):
     tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
-    
+    tokenizer.pad_token = tokenizer.eos_token
     print("📂 Cargando datos de entrenamiento...")
     train_dataset = CodeDocumentationDataset(config["train_data_path"], tokenizer, config["max_seq_length"])
     

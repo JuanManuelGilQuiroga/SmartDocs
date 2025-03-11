@@ -1,10 +1,13 @@
 {
-    "model_name": "codellama/CodeLlama-7b-Instruct-hf",
+    "model_name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
     "epochs": 3,
     "batch_size": 2,
     "learning_rate": 2e-5,
-    "max_seq_length": 8192,
-    "train_data_path": "C:/Users/Solvo/Desktop/SmartDocs/src/ai_processing/data/train.json",
-    "test_data_path": "C:/Users/Solvo/Desktop/SmartDocs/src/ai_processing/data/test.json",
-    "save_model_path": "saved_models/CodeLlama-7b_finetuned"
+    "max_seq_length": 2048,
+    "torch_dtype": "torch.float16",
+    "low_cpu_mem_usage": true,
+    "device_map": "auto",
+    "train_data_path": "C:/Users/Solvo/Desktop/SmartDocs/src/ai_processing/data/new_train2.json",
+    "test_data_path": "C:/Users/Solvo/Desktop/SmartDocs/src/ai_processing/data/new_test.json",
+    "save_model_path": "saved_models/TinyLlama-1.1B_finetuned"
 }
